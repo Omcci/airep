@@ -22,6 +22,14 @@ export const api = {
   getChecklist: () => fetchJSON<Checklist>('/content/checklist'),
   getFAQ: () => fetchJSON<FAQItem[]>('/content/faq'),
   getGlossary: () => fetchJSON<GlossaryTerm[]>('/content/glossary'),
+  auditEvaluate: (payload: { url?: string; content?: string }) =>
+    fetchJSON<{ score: number; metrics: Record<string, number> }>(
+      '/audit/evaluate',
+      {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      },
+    ),
 }
 
 export { fetchJSON }
