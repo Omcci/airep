@@ -1,34 +1,26 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import NavBar from './components/NavBar'
+import Home from './pages/Home'
+import Report from './pages/Report'
+import Checklist from './pages/Checklist'
+import FAQ from './pages/FAQ'
+import Glossary from './pages/Glossary'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="min-h-full bg-gray-50">
+      <NavBar />
+      <main className="mx-auto max-w-6xl p-4">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/report" element={<Report />} />
+          <Route path="/checklist" element={<Checklist />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/glossary" element={<Glossary />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </div>
   )
 }
 
