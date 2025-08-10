@@ -29,6 +29,20 @@ function ChecklistPage() {
                     </li>
                   ))}
                 </ul>
+                {g.sources && g.sources.length > 0 && (
+                  <div className="pt-2 text-xs text-gray-500">
+                    Sources:
+                    <ul className="mt-1 list-disc pl-6">
+                      {g.sources.map((src) => (
+                        <li key={src.url}>
+                          <a className="underline hover:text-primary" href={src.url} target="_blank" rel="noreferrer">
+                            {src.title}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </Reveal>

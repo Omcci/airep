@@ -20,6 +20,10 @@ export class ContentController {
             'Real‑time retrieval: models prefer authoritative, recent, well‑structured sources',
             'Reasoning: clear chunking, headings, and summaries help the model extract quotable answers',
           ],
+          sources: [
+            { title: 'Google Search Rater Guidelines (E‑E‑A‑T)', url: 'https://developers.google.com/search/blog/2022/08/helpful-content-update' },
+            { title: 'Schema.org types (FAQPage, HowTo, Article)', url: 'https://schema.org/docs/full.html' },
+          ],
         },
         {
           id: 'optimize-for-llms',
@@ -33,6 +37,10 @@ export class ContentController {
             'Accessibility: no paywalls or robot blocks; ship sitemap; optimize meta; add Schema.org structured data',
             'Authority: expert but approachable tone; cite reputable sources; publish consistently on a focused topic',
           ],
+          sources: [
+            { title: 'OpenAI on attribution and citations', url: 'https://openai.com/blog' },
+            { title: 'Perplexity AI Publisher Program', url: 'https://www.perplexity.ai/publisher' },
+          ],
         },
         {
           id: 'llm-content-strategies',
@@ -43,6 +51,10 @@ export class ContentController {
             'Multimodal content (text + image + video): increasingly used by models',
             'Conversational keywords: “how to X”, “best way to Y”, “step‑by‑step”, etc.',
           ],
+          sources: [
+            { title: 'FAQPage markup', url: 'https://schema.org/FAQPage' },
+            { title: 'HowTo markup', url: 'https://schema.org/HowTo' },
+          ],
         },
         {
           id: 'distribution',
@@ -52,6 +64,9 @@ export class ContentController {
             'Earn media coverage and press mentions; LLMs often trust these sources',
             'Encourage direct citations on blogs/forums with proper links',
           ],
+          sources: [
+            { title: 'Harvard guide to evaluating sources', url: 'https://guides.library.harvard.edu/evaluatingsources' },
+          ],
         },
         {
           id: 'measure-and-iterate',
@@ -60,6 +75,9 @@ export class ContentController {
             'Test multiple AIs: ask “What is the best resource for … ?” and check if you appear',
             'Track traffic from AI engines (e.g., Perplexity stats when available)',
             'Tune pages to match the exact questions users ask',
+          ],
+          sources: [
+            { title: 'Perplexity Publisher Analytics', url: 'https://www.perplexity.ai/publisher' },
           ],
         },
       ],
@@ -80,6 +98,9 @@ export class ContentController {
             'Bullet lists for steps/benefits',
             'Add an on‑page glossary for advanced terms if needed',
           ],
+          sources: [
+            { title: 'W3C HTML Techniques for headings', url: 'https://www.w3.org/WAI/WCAG21/Techniques/html/H42' },
+          ],
         },
         {
           id: 'specificity',
@@ -87,6 +108,9 @@ export class ContentController {
           items: [
             'Add numbers, examples, benchmarks, and study links',
             'Write quotable, concise sentences with unambiguous claims',
+          ],
+          sources: [
+            { title: 'Nielsen Norman Group: Writing for the Web', url: 'https://www.nngroup.com' },
           ],
         },
         {
@@ -97,6 +121,10 @@ export class ContentController {
             'Provide a sitemap and optimized meta tags',
             'Implement Schema.org (FAQPage, Article, HowTo where relevant)',
           ],
+          sources: [
+            { title: 'Robots.txt specifications', url: 'https://developers.google.com/search/docs/crawling-indexing/robots/intro' },
+            { title: 'Sitemaps protocol', url: 'https://www.sitemaps.org/' },
+          ],
         },
         {
           id: 'authority',
@@ -105,6 +133,9 @@ export class ContentController {
             'Expert, pedagogical tone; transparent authorship',
             'Cite reputable external sources; link out where relevant',
             'Publish consistently on a focused topic cluster',
+          ],
+          sources: [
+            { title: 'E‑E‑A‑T overview', url: 'https://developers.google.com/search/docs/fundamentals/creating-helpful-content' },
           ],
         },
       ],
@@ -146,6 +177,18 @@ export class ContentController {
       { term: 'Sitemap', definition: 'An XML map of site URLs to improve discovery and crawling.' },
       { term: 'FAQPage markup', definition: 'Schema.org type for Q&A content that improves LLM extraction and answer formatting.' },
       { term: 'Citations grounding', definition: 'Providing references so the model can ground claims and increase trust.' },
+      { term: 'Vector database', definition: 'A database that stores vector embeddings for semantic search and retrieval (e.g., for RAG).' },
+      { term: 'Embedding', definition: 'Numeric representation of text/images enabling semantic similarity search.' },
+      { term: 'OpenGraph / Twitter Cards', definition: 'Meta tags that define how URLs look when shared and assist context extraction.' },
+      { term: 'Robots directives', definition: 'Robots.txt and meta robots tags controlling crawl/index behavior.' },
+      { term: 'Canonicalization', definition: 'The process of specifying the canonical URL to consolidate signals across duplicates.' },
+      { term: 'Content freshness', definition: 'Signals indicating recency of content updates, impacting trust and retrieval.' },
+      { term: 'Topical authority', definition: 'Publishing depth and consistency on a focused topic, boosting trust and retrieval likelihood.' },
+      { term: 'Anchor text', definition: 'Clickable text of a link; descriptive anchors aid understanding and retrieval.' },
+      { term: 'Alt text', definition: 'Textual description for images improving accessibility and context for AI/SEO.' },
+      { term: 'Page speed (Core Web Vitals)', definition: 'Performance metrics (LCP, CLS, INP) affecting UX and crawl efficiency.' },
+      { term: 'Content deduplication', definition: 'Avoiding duplicate content across URLs to prevent signal dilution.' },
+      { term: 'Sitemaps index', definition: 'A file that lists multiple sitemap files for large websites.' },
     ]
   }
 }

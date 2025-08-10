@@ -10,7 +10,8 @@ import Audit from './pages/Audit'
 
 function App() {
   return (
-    <div className="min-h-full">
+    <div>
+      <div className="app-bg" />
       <NavBar />
       <SmoothScroll>
         <main className="mx-auto max-w-6xl p-4">

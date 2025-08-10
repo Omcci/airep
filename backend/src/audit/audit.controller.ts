@@ -19,7 +19,9 @@ export class AuditController {
         const text = await this.resolveText(body)
         const metrics = this.evaluateText(text)
         const score = this.computeScore(metrics)
-        return { score, metrics }
+        const details = this.buildDetails(metrics)
+        const recommendations = this.buildRecommendations(details)
+        return { score, metrics, details, recommendations }
     }
 
     private async resolveText(body: AuditRequestDto): Promise<string> {
@@ -69,6 +71,95 @@ export class AuditController {
             m.conversational * weights.conversational
         const max = 2 * weights.structure + 2 * weights.semantics + 1 * weights.faq + 2 * weights.specificity + 1 * weights.summary + 2 * weights.conversational
         return Math.round((raw / max) * 100)
+    }
+
+    private buildDetails(m: ReturnType<AuditController['evaluateText']>) {
+        return {
+            structure: {
+                label: 'Structure',
+                value: m.structure,
+                max: 3,
+                description: 'Headings and lists help models extract quotable chunks.',
+                why: 'Clear H1/H2/H3 and bullet points increase passage‑level retrieval quality.',
+                suggestions: [
+                    'Add a single H1, then H2/H3 for sections',
+                    'Use bullet lists for steps/benefits',
+                    'Keep paragraphs short (1 idea each)'
+                ],
+            },
+            semantics: {
+                label: 'Structured data & meta',
+                value: m.semantics,
+                max: 2,
+                description: 'Schema.org and meta description clarify page intent.',
+                why: 'Machine‑readable markup improves understanding and attribution.',
+                suggestions: [
+                    'Add Schema.org (FAQPage, HowTo, Article)',
+                    'Provide a concise meta description',
+                ],
+            },
+            faq: {
+                label: 'Q&A format',
+                value: m.faq,
+                max: 1,
+                description: 'Direct Q→A sections are easy to reuse in LLM answers.',
+                why: 'FAQs align with conversational retrieval and summarization.',
+                suggestions: [
+                    'Add a FAQ section answering common queries',
+                    'Mark it up with FAQPage schema',
+                ],
+            },
+            specificity: {
+                label: 'Specificity',
+                value: m.specificity,
+                max: 1,
+                description: 'Numbers and concrete examples make content quotable.',
+                why: 'Precise claims are more likely to be cited verbatim.',
+                suggestions: [
+                    'Add benchmarks, metrics, and study links',
+                    'Use concrete examples with figures',
+                ],
+            },
+            summary: {
+                label: 'Upfront summary',
+                value: m.summary,
+                max: 1,
+                description: 'An opening summary increases reuse of your phrasing.',
+                why: 'Models often lift the first concise summary for answers.',
+                suggestions: [
+                    'Add a short executive summary at the top',
+                    'Provide TL;DR for long articles',
+                ],
+            },
+            conversational: {
+                label: 'Conversational phrasing',
+                value: m.conversational,
+                max: 2,
+                description: 'Use natural prompts and how‑to phrasing.',
+                why: 'Matches how users query LLMs (“how to…”, “best way…”)',
+                suggestions: [
+                    'Include headings like “How to …” and “Best way to …”',
+                    'Add step‑by‑step sections and checklists',
+                ],
+            },
+        }
+    }
+
+    private buildRecommendations(details: ReturnType<AuditController['buildDetails']>) {
+        // Prioritize metrics with largest improvement potential
+        const entries = Object.values(details).map((d) => ({
+            key: d.label,
+            gap: Math.max(0, d.max - d.value),
+            suggestions: d.suggestions,
+        }))
+        entries.sort((a, b) => b.gap - a.gap)
+        const recs: string[] = []
+        for (const e of entries) {
+            if (e.gap <= 0) continue
+            recs.push(`${e.key}: ${e.suggestions[0]}`)
+            if (recs.length >= 5) break
+        }
+        return recs
     }
 }
 

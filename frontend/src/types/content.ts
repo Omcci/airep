@@ -3,6 +3,7 @@ export type ReportSection = {
   title: string
   paragraphs?: string[]
   bullets?: string[]
+  sources?: { title: string; url: string }[]
 }
 
 export type Report = {
@@ -14,6 +15,7 @@ export type ChecklistGroup = {
   id: string
   title: string
   items: string[]
+  sources?: { title: string; url: string }[]
 }
 
 export type Checklist = {
