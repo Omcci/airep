@@ -5,54 +5,61 @@ export class ContentController {
   @Get('report')
   getReport() {
     return {
-      title: 'SEO nouvelle génération pour les IA conversationnelles',
+      title: 'Next‑gen AI SEO for conversational assistants',
       sections: [
         {
-          id: 'llm-fonctionnement',
-          title: 'Comprendre comment les LLM trouvent et présentent l’info',
+          id: 'llm-how-it-works',
+          title: 'How LLMs find and present information',
           paragraphs: [
-            'Contrairement à Google, un LLM ne liste pas 10 liens bleus : il synthétise.',
-            'Il s’appuie sur ses données d’entraînement, des sources consultées en temps réel et sa capacité de raisonnement et de résumé.',
-            'Conclusion : pour ressortir, ton contenu doit être structuré, clair, cité, et reconnu comme source fiable.',
+            'Unlike classic search, LLMs synthesize. You get a single, reasoned answer, not ten blue links.',
+            'They rely on three pillars: pretraining data (if your content is public and indexed), real‑time sources (via integrated web search/browsing), and reasoning/summarization skills.',
+            'Implication: to be surfaced and cited, your content must be structured, unambiguous, properly cited, and trusted.',
+          ],
+          bullets: [
+            'Pretraining coverage: public, crawlable pages are more likely to be represented',
+            'Real‑time retrieval: models prefer authoritative, recent, well‑structured sources',
+            'Reasoning: clear chunking, headings, and summaries help the model extract quotable answers',
           ],
         },
         {
-          id: 'optimiser-contenu',
-          title: 'Optimiser ton contenu pour les LLMs',
-          paragraphs: ['Recette pratique pour rendre ton contenu “LLM‑friendly”.'],
+          id: 'optimize-for-llms',
+          title: 'Make your content LLM‑friendly',
+          paragraphs: [
+            'Use explicit structure, specific claims, and machine‑readable context so models can quote and attribute you.',
+          ],
           bullets: [
-            'Titres clairs (H1, H2, H3), paragraphes courts, listes à puces, glossaire',
-            'Être ultra‑spécifique: chiffres, exemples concrets, études',
-            'Pages accessibles et indexables: pas de paywall, sitemap, meta, schema.org',
-            'Optimiser pour être cité comme autorité: ton d’expert, sources reconnues, publication régulière',
+            'Structure: clear H1/H2/H3, short paragraphs, bullet lists for steps/benefits, on‑page glossary if needed',
+            'Specificity: include numbers, examples, studies; the more precise, the more quotable',
+            'Accessibility: no paywalls or robot blocks; ship sitemap; optimize meta; add Schema.org structured data',
+            'Authority: expert but approachable tone; cite reputable sources; publish consistently on a focused topic',
           ],
         },
         {
-          id: 'strategies',
-          title: 'Stratégies spécifiques GEO',
+          id: 'llm-content-strategies',
+          title: 'LLM‑specific content strategies',
           bullets: [
-            'Pages Q&A (FAQ) — format préféré des LLMs',
-            'Articles avec résumés en début',
-            'Contenu multimodal: texte + image + vidéo',
-            'Mots‑clés conversationnels: “comment faire X”, “meilleure méthode pour Y”',
+            'Q&A/FAQ pages: direct question→answer format maps well to LLM retrieval',
+            'Articles with upfront summaries: increases chance the model reuses your phrasing',
+            'Multimodal content (text + image + video): increasingly used by models',
+            'Conversational keywords: “how to X”, “best way to Y”, “step‑by‑step”, etc.',
           ],
         },
         {
-          id: 'diffusion',
-          title: 'Diffusion et signaux externes',
+          id: 'distribution',
+          title: 'Distribution and external signals',
           bullets: [
-            'Publier sur des sites à forte autorité',
-            'Mentions dans communiqués / médias',
-            'Encourager des citations directes sur blogs/forums',
+            'Publish on high‑authority domains (guest posts, partnerships)',
+            'Earn media coverage and press mentions; LLMs often trust these sources',
+            'Encourage direct citations on blogs/forums with proper links',
           ],
         },
         {
-          id: 'mesure',
-          title: 'Mesurer et ajuster',
+          id: 'measure-and-iterate',
+          title: 'Measure and iterate',
           bullets: [
-            'Tester avec plusieurs IA (ChatGPT, Perplexity, Claude)',
-            'Surveiller trafic issus de moteurs IA',
-            'Ajuster les pages selon les questions des utilisateurs',
+            'Test multiple AIs: ask “What is the best resource for … ?” and check if you appear',
+            'Track traffic from AI engines (e.g., Perplexity stats when available)',
+            'Tune pages to match the exact questions users ask',
           ],
         },
       ],
@@ -62,42 +69,42 @@ export class ContentController {
   @Get('checklist')
   getChecklist() {
     return {
-      title: 'Checklist LLM‑SEO',
+      title: 'LLM‑SEO checklist',
       groups: [
         {
           id: 'structure',
           title: 'Structure',
           items: [
-            'H1/H2/H3 clairs et descriptifs',
-            'Paragraphes courts et idées claires',
-            'Listes à puces pour étapes/avantages',
-            'Glossaire des termes clés',
+            'Use descriptive H1/H2/H3',
+            'Short paragraphs with one clear idea each',
+            'Bullet lists for steps/benefits',
+            'Add an on‑page glossary for advanced terms if needed',
           ],
         },
         {
-          id: 'specificite',
-          title: 'Spécificité',
+          id: 'specificity',
+          title: 'Specificity',
           items: [
-            'Chiffres, exemples, études',
-            'Formulations précises pour citations',
+            'Add numbers, examples, benchmarks, and study links',
+            'Write quotable, concise sentences with unambiguous claims',
           ],
         },
         {
-          id: 'accessibilite',
-          title: 'Accessibilité',
+          id: 'accessibility',
+          title: 'Accessibility & crawlability',
           items: [
-            'Pas de paywall / blocage robots',
-            'Sitemap et meta optimisées',
-            'Schema.org pour contexte',
+            'Avoid paywalls/robot blocks; ensure fast load',
+            'Provide a sitemap and optimized meta tags',
+            'Implement Schema.org (FAQPage, Article, HowTo where relevant)',
           ],
         },
         {
-          id: 'autorite',
-          title: 'Autorité',
+          id: 'authority',
+          title: 'Authority',
           items: [
-            'Ton d’expert, pédagogique',
-            'Sources reconnues citées',
-            'Publication régulière sur le même sujet',
+            'Expert, pedagogical tone; transparent authorship',
+            'Cite reputable external sources; link out where relevant',
+            'Publish consistently on a focused topic cluster',
           ],
         },
       ],
@@ -108,17 +115,18 @@ export class ContentController {
   getFAQ() {
     return [
       {
-        question: 'Comment un LLM choisit‑il les sources ?',
+        question: 'How do LLMs pick sources?',
         answer:
-          'En combinant données d’entraînement, navigation temps réel et fiabilité perçue (structure, citations, autorité).',
+          'They combine pretraining coverage, real‑time web retrieval, and perceived reliability (structure, citations, authority).',
       },
       {
-        question: 'Quel format de page fonctionne le mieux ?',
-        answer: 'FAQ/Q&A, articles avec résumés, contenu multimodal, questions conversationnelles.',
+        question: 'What page formats work best?',
+        answer:
+          'FAQ/Q&A pages, articles with upfront summaries, multimodal content, and conversational queries.',
       },
       {
-        question: 'Comment être cité textuellement ?',
-        answer: 'Être spécifique, fournir chiffres et formulations claires et concises.',
+        question: 'How can I get quoted verbatim?',
+        answer: 'Be specific, include numbers, and craft short, precise, unambiguous sentences.',
       },
     ]
   }
@@ -126,9 +134,18 @@ export class ContentController {
   @Get('glossary')
   getGlossary() {
     return [
-      { term: 'LLM', definition: 'Large Language Model, modèle génératif de texte.' },
-      { term: 'Schema.org', definition: 'Vocabulaire de données structurées pour décrire le contenu.' },
-      { term: 'FAQ', definition: 'Foire Aux Questions, format de questions/réponses.' },
+      { term: 'AI SEO (LLM‑SEO)', definition: 'Optimizing content to be discoverable, quotable, and trusted by large language models and AI search.' },
+      { term: 'RAG (Retrieval‑Augmented Generation)', definition: 'A pattern where the model retrieves external documents at query time and grounds its answer on them.' },
+      { term: 'Structured data (Schema.org)', definition: 'Machine‑readable markup (e.g., FAQPage, Article, HowTo) that clarifies entities and page intent.' },
+      { term: 'E‑E‑A‑T', definition: 'Experience, Expertise, Authoritativeness, Trustworthiness — signals that drive perceived credibility.' },
+      { term: 'Conversational keywords', definition: 'Natural language queries like “how to…”, “best way to…”, or “step‑by‑step…”.' },
+      { term: 'Source attribution', definition: 'Explicit linking/quoting of original sources used to ground the answer.' },
+      { term: 'Answer chunking', definition: 'Structuring content into concise, self‑contained blocks the model can lift verbatim.' },
+      { term: 'Passage ranking', definition: 'Ranking at a paragraph/section level; structuring helps retrieval systems locate the best passage.' },
+      { term: 'Canonical URL', definition: 'A tag that indicates the preferred version of a page to avoid duplication and dilution.' },
+      { term: 'Sitemap', definition: 'An XML map of site URLs to improve discovery and crawling.' },
+      { term: 'FAQPage markup', definition: 'Schema.org type for Q&A content that improves LLM extraction and answer formatting.' },
+      { term: 'Citations grounding', definition: 'Providing references so the model can ground claims and increase trust.' },
     ]
   }
 }

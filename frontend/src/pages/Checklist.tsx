@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Reveal from '@/components/Reveal'
+import { CheckCircle2 } from 'lucide-react'
 
 function ChecklistPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ['checklist'], queryFn: api.getChecklist })
@@ -13,18 +15,23 @@ function ChecklistPage() {
       <h1 className="text-2xl font-semibold">{data!.title}</h1>
       <div className="space-y-6">
         {data!.groups.map((g) => (
-          <Card key={g.id}>
-            <CardHeader>
-              <CardTitle className="text-lg">{g.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc pl-6 text-gray-700">
-                {g.items.map((it, i) => (
-                  <li key={i}>{it}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <Reveal key={g.id}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">{g.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+                  {g.items.map((it, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
+                      <span>{it}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </Reveal>
         ))}
       </div>
     </div>

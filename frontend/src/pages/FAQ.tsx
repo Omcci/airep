@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Reveal from '@/components/Reveal'
 
 function FAQPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ['faq'], queryFn: api.getFAQ })
@@ -13,14 +14,16 @@ function FAQPage() {
       <h1 className="text-2xl font-semibold">FAQ</h1>
       <div className="space-y-4">
         {data!.map((q, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <CardTitle className="text-lg">{q.question}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700">{q.answer}</p>
-            </CardContent>
-          </Card>
+          <Reveal key={i}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">{q.question}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 dark:text-gray-300">{q.answer}</p>
+              </CardContent>
+            </Card>
+          </Reveal>
         ))}
       </div>
     </div>
