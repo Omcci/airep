@@ -160,7 +160,9 @@ export class AISecurityService {
     // 4. Content Quality Check
     const qualityResult = this.checkContentQuality(content, platform)
     if (!qualityResult.isValid) {
-      warnings.push(qualityResult.reason)
+      if (qualityResult.reason) {
+        warnings.push(qualityResult.reason)
+      }
       if (qualityResult.blocked) {
         blocked = true
         reason = 'Content quality too low'
@@ -182,7 +184,7 @@ export class AISecurityService {
     if (warnings.length > 0) {
       this.logger.warn(`Security warnings for content: ${warnings.join(', ')}`)
     }
-    if (blocked) {
+    if (blocked && reason) {
       this.logger.error(`Content blocked for security reasons: ${reason}`)
     }
 
@@ -191,7 +193,7 @@ export class AISecurityService {
       warnings,
       riskLevel,
       blocked,
-      reason
+      reason: reason || undefined
     }
   }
 
@@ -350,8 +352,8 @@ export class AISecurityService {
    * Check rate limiting (placeholder for future implementation)
    */
   private async checkRateLimit(content: string): Promise<{ blocked: boolean }> {
-    // TODO: Implement actual rate limiting
-    // This could check user IP, session, or account-based limits
+    // Rate limiting is now handled by RateLimitService
+    // This method is kept for backward compatibility
     return { blocked: false }
   }
 
