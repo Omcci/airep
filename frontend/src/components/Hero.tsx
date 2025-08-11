@@ -1,44 +1,62 @@
-import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { ArrowRight, Sparkles, Target, TrendingUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
-export default function Hero() {
+function Hero() {
     return (
-        <div className="relative overflow-hidden rounded-2xl border bg-gradient-to-b from-white/60 to-white/20 p-10 shadow-sm dark:from-gray-900/60 dark:to-gray-900/20">
-            <motion.h1
-                className="text-4xl font-extrabold tracking-tight sm:text-5xl"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: 'easeOut' }}
-            >
-                Next‑gen AI SEO
-                <span className="bg-gradient-to-r from-indigo-600 via-sky-500 to-emerald-500 bg-clip-text text-transparent"> for LLMs</span>
-            </motion.h1>
-            <motion.p
-                className="mt-3 max-w-2xl text-gray-600 dark:text-gray-300"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: 'easeOut', delay: 0.1 }}
-            >
-                Structure, specificity, accessibility, and authority to get quoted by conversational AI.
-            </motion.p>
-            <motion.div
-                className="mt-6 flex gap-3"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: 'easeOut', delay: 0.2 }}
-            >
-                <Button asChild>
-                    <Link to="/audit">Run AI SEO Audit</Link>
-                </Button>
-                <Button asChild variant="secondary">
-                    <Link to="/report">Read the Report</Link>
-                </Button>
-            </motion.div>
-            <div className="pointer-events-none absolute -top-10 right-0 h-[220px] w-[220px] rounded-full bg-indigo-500/20 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-10 left-0 h-[260px] w-[260px] rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="text-center space-y-8 py-12">
+            <div className="space-y-4">
+                <Badge className="px-4 py-2 text-sm">
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Next-Gen SEO for AI
+                </Badge>
+                <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
+                    Optimize Your Content for
+                    <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                        {' '}AI Search
+                    </span>
+                </h1>
+                <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                    Transform your content to be discoverable, understandable, and valuable to conversational AI systems.
+                    Get found by the AI-powered search engines of tomorrow.
+                </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link to="/audit">
+                    <Button size="lg" className="group">
+                        <Target className="mr-2 h-5 w-5" />
+                        Start Free AI Audit
+                        <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                </Link>
+                <Link to="/report">
+                    <Button variant="outline" size="lg">
+                        <TrendingUp className="mr-2 h-5 w-5" />
+                        Learn AI SEO
+                    </Button>
+                </Link>
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    Free AI Content Analysis
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    Actionable Optimization Tips
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    AI-Friendly Content Templates
+                </div>
+            </div>
         </div>
     )
 }
+
+export default Hero
 
 

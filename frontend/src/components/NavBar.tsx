@@ -22,6 +22,12 @@ function NavBar() {
             </span>
           </NavLink>
           <div className="flex items-center gap-2">
+            <NavLink to="/boost" className={({ isActive }) => `${base} ${isActive ? active : inactive}`}>
+              Boost
+              {location.pathname === '/boost' && (
+                <motion.span layoutId="nav-underline" className="absolute inset-x-1 -bottom-1 h-0.5 rounded bg-gradient-to-r from-indigo-500 to-emerald-500" />
+              )}
+            </NavLink>
             <NavLink to="/audit" className={({ isActive }) => `${base} ${isActive ? active : inactive}`}>
               Audit
               {location.pathname === '/audit' && (

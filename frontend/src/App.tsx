@@ -7,6 +7,7 @@ import Checklist from './pages/Checklist'
 import FAQ from './pages/FAQ'
 import Glossary from './pages/Glossary'
 import Audit from './pages/Audit'
+import Boost from './pages/Boost'
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/report" element={<Report />} />
             <Route path="/audit" element={<Audit />} />
+            <Route path="/boost" element={<Boost />} />
             <Route path="/checklist" element={<Checklist />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/glossary" element={<Glossary />} />

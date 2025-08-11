@@ -33,4 +33,31 @@ export type GlossaryTerm = {
   definition: string
 }
 
+export interface AuditResult {
+  score: number
+  details: Record<string, {
+    label: string
+    value: number
+    max: number
+    description: string
+    why: string
+    suggestions: string[]
+  }>
+  recommendations: string[]
+}
+
+export interface OptimizeResult {
+  original: AuditResult
+  optimized: {
+    content: string
+    improvements: Array<{
+      area: string
+      current: number
+      target: number
+      priority: number
+      suggestions: string[]
+    }>
+  }
+}
+
 

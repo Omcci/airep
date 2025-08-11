@@ -18,18 +18,34 @@ async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  getReport: () => fetchJSON<Report>('/content/report'),
-  getChecklist: () => fetchJSON<Checklist>('/content/checklist'),
-  getFAQ: () => fetchJSON<FAQItem[]>('/content/faq'),
-  getGlossary: () => fetchJSON<GlossaryTerm[]>('/content/glossary'),
-  auditEvaluate: (payload: { url?: string; content?: string }) =>
-    fetchJSON<{ score: number; metrics: Record<string, number> }>(
-      '/audit/evaluate',
-      {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      },
-    ),
+  getReport: () => fetch('/api/content/report').then(res => res.json()),
+  getChecklist: () => fetch('/api/content/checklist').then(res => res.json()),
+  getFAQ: () => fetch('/api/content/faq').then(res => res.json()),
+  getGlossary: () => fetch('/api/content/glossary').then(res => res.json()),
+  auditEvaluate: (data: { url?: string; content?: string }) =>
+    fetch('/api/audit/evaluate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    }).then(res => res.json()),
+  optimizeContent: (content: string) =>
+    fetch('/api/audit/optimize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    }).then(res => res.json()),
+  boostTool: (payload: any) =>
+    fetch('/api/boost/tool', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(res => res.json()),
+  boostArticle: (payload: any) =>
+    fetch('/api/boost/article', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).then(res => res.json()),
 }
 
 export { fetchJSON }
