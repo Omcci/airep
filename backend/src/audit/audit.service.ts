@@ -486,7 +486,7 @@ export class AuditService {
 
     private generateLinkedInOptimized(content: string, details: any) {
         // LinkedIn optimization: analyze actual content and generate relevant optimization
-        
+
         // If content is too short or meaningless, provide guidance instead of generic content
         if (content.length < 10 || !this.hasMeaningfulContent(content)) {
             return `🚀 Content Optimization Needed
@@ -571,14 +571,14 @@ ${this.generateEngagementQuestions(content)}
         if (lowerContent.includes('rythme circadien')) {
             insights.push('• Daily routine optimization comparable to sleep and nutrition')
         }
-        
+
         // Check for job search related content
         if (lowerContent.includes('alternance') || lowerContent.includes('stage') || lowerContent.includes('candidature')) {
             insights.push('• Job search requires persistence and continuous learning')
             insights.push('• Building projects during search demonstrates proactive mindset')
             insights.push('• Portfolio development showcases practical skills')
         }
-        
+
         if (lowerContent.includes('projet') || lowerContent.includes('portfolio')) {
             insights.push('• Personal projects demonstrate initiative and technical skills')
             insights.push('• Portfolio showcases practical application of knowledge')
@@ -620,14 +620,14 @@ ${this.generateEngagementQuestions(content)}
             benefits.push('• Meeting scheduling without traffic uncertainty')
             benefits.push('• Work-life balance through efficient time management')
         }
-        
+
         // Check for job search related benefits
         if (lowerContent.includes('alternance') || lowerContent.includes('stage')) {
             benefits.push('• Professional development through hands-on experience')
             benefits.push('• Industry exposure and networking opportunities')
             benefits.push('• Skill validation in real-world projects')
         }
-        
+
         if (lowerContent.includes('projet') || lowerContent.includes('portfolio')) {
             benefits.push('• Demonstrates technical competence and initiative')
             benefits.push('• Shows problem-solving and project management skills')
@@ -666,14 +666,14 @@ ${this.generateEngagementQuestions(content)}
             impacts.push('• Remote work will integrate seamlessly with autonomous commuting')
             impacts.push('• Business districts will reorganize around autonomous hubs')
         }
-        
+
         // Check for job market impacts
         if (lowerContent.includes('alternance') || lowerContent.includes('stage') || lowerContent.includes('emploi')) {
             impacts.push('• Job market evolution toward skill-based hiring')
             impacts.push('• Increased demand for practical experience')
             impacts.push('• Portfolio-driven recruitment processes')
         }
-        
+
         if (lowerContent.includes('développement') || lowerContent.includes('tech')) {
             impacts.push('• Technology sector growth and innovation')
             impacts.push('• New career opportunities in emerging fields')
@@ -712,14 +712,14 @@ ${this.generateEngagementQuestions(content)}
             insights.push('• Organizations must develop AI-first strategies')
             insights.push('• Leadership will require understanding of autonomous systems')
         }
-        
+
         // Check for job search strategic insights
         if (lowerContent.includes('alternance') || lowerContent.includes('stage') || lowerContent.includes('candidature')) {
             insights.push('• Strategic positioning in competitive job markets')
             insights.push('• Building competitive advantages through projects')
             insights.push('• Long-term career planning and skill development')
         }
-        
+
         if (lowerContent.includes('projet') || lowerContent.includes('portfolio')) {
             insights.push('• Strategic skill development for market demands')
             insights.push('• Building professional brand and reputation')
@@ -758,14 +758,14 @@ ${this.generateEngagementQuestions(content)}
             questions.push('• What new business opportunities does this create?')
             questions.push('• How will this affect your company\'s location strategy?')
         }
-        
+
         // Check for job search related questions
         if (lowerContent.includes('alternance') || lowerContent.includes('stage') || lowerContent.includes('emploi')) {
             questions.push('• What\'s your experience with the current job market?')
             questions.push('• How do you evaluate candidates beyond their CV?')
             questions.push('• What skills do you think are most valuable today?')
         }
-        
+
         if (lowerContent.includes('projet') || lowerContent.includes('portfolio')) {
             questions.push('• How do you showcase your skills in interviews?')
             questions.push('• What projects have had the biggest impact on your career?')
@@ -805,16 +805,16 @@ ${this.generateEngagementQuestions(content)}
         if (lowerContent.includes('ia') || lowerContent.includes('ai') || lowerContent.includes('technologie')) {
             hashtags.push('AI', 'Innovation', 'Technology')
         }
-        
+
         // Check for job search related hashtags
         if (lowerContent.includes('alternance') || lowerContent.includes('stage') || lowerContent.includes('emploi')) {
             hashtags.push('JobSearch', 'CareerDevelopment', 'ProfessionalGrowth')
         }
-        
+
         if (lowerContent.includes('projet') || lowerContent.includes('portfolio')) {
             hashtags.push('PersonalProjects', 'Portfolio', 'SkillDevelopment')
         }
-        
+
         if (lowerContent.includes('développement') || lowerContent.includes('tech')) {
             hashtags.push('SoftwareDevelopment', 'TechCareer', 'Programming')
         }
@@ -913,7 +913,7 @@ ${this.generateEngagementQuestions(content)}
         const meaningfulWords = content.toLowerCase()
             .split(/\s+/)
             .filter(word => word.length > 2 && /[a-z]/.test(word))
-        
+
         return meaningfulWords.length >= 3
     }
 }

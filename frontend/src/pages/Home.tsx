@@ -33,7 +33,7 @@ function HomePage() {
               <p className="text-muted-foreground text-sm mb-4">
                 Analyze your existing content for AI optimization. Get specific scores and actionable recommendations.
               </p>
-              <Link to="/audit" className="inline-flex items-center text-sm text-primary hover:underline group-hover:gap-1 transition-all">
+              <Link to="/studio" className="inline-flex items-center text-sm text-primary hover:underline group-hover:gap-1 transition-all">
                 Run Audit <ArrowRight className="h-4 w-4" />
               </Link>
             </CardContent>
@@ -52,7 +52,7 @@ function HomePage() {
               <p className="text-muted-foreground text-sm mb-4">
                 Transform your content to be AI-friendly. Get optimized versions with structured data and AI-optimized elements.
               </p>
-              <Link to="/audit" className="inline-flex items-center text-sm text-primary hover:underline group-hover:gap-1 transition-all">
+              <Link to="/studio" className="inline-flex items-center text-sm text-primary hover:underline group-hover:gap-1 transition-all">
                 Optimize Now <ArrowRight className="h-4 w-4" />
               </Link>
             </CardContent>
@@ -86,10 +86,10 @@ function HomePage() {
             Start with a free AI SEO audit of your content. Get actionable insights and see how AI systems will discover and present your information.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/audit">
+            <Link to="/studio">
               <Badge className="px-6 py-3 text-base hover:scale-105 transition-transform cursor-pointer">
                 <Zap className="mr-2 h-4 w-4" />
-                Start Free Audit
+                Start AI SEO Studio
               </Badge>
             </Link>
             <Link to="/checklist">

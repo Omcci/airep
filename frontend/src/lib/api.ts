@@ -22,29 +22,29 @@ export const api = {
   getChecklist: () => fetch('/api/content/checklist').then(res => res.json()),
   getFAQ: () => fetch('/api/content/faq').then(res => res.json()),
   getGlossary: () => fetch('/api/content/glossary').then(res => res.json()),
-  auditEvaluate: (data: { url?: string; content?: string }) =>
+  auditEvaluate: (data: { url?: string; content?: string; platform?: string }) =>
     fetch('/api/audit/evaluate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     }).then(res => res.json()),
-  optimizeContent: (content: string) =>
+  optimizeContent: (data: { content: string; platform: string }) =>
     fetch('/api/audit/optimize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content })
+      body: JSON.stringify(data)
     }).then(res => res.json()),
-  boostTool: (payload: any) =>
+  boostTool: (data: { name: string; description: string; url: string; category: string; useCases: string; pricing: string }) =>
     fetch('/api/boost/tool', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data)
     }).then(res => res.json()),
-  boostArticle: (payload: any) =>
+  boostArticle: (data: { title: string; content: string; keywords: string }) =>
     fetch('/api/boost/article', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(data)
     }).then(res => res.json()),
 }
 

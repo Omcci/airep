@@ -24,10 +24,10 @@ function Hero() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Link to="/audit">
+                <Link to="/studio">
                     <Button size="lg" className="group">
                         <Target className="mr-2 h-5 w-5" />
-                        Start Free AI Audit
+                        Start AI SEO Studio
                         <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                     </Button>
                 </Link>
