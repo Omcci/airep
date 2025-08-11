@@ -4,6 +4,7 @@ import { OpenAIService } from './openai.service'
 import { AIConsolidationService } from './ai-consolidation.service'
 import { AITestController } from './ai-test.controller'
 import { AISecurityService } from './ai-security.service'
+import { RateLimitService } from './rate-limit.service'
 
 @Module({
   controllers: [AITestController],
@@ -12,7 +13,8 @@ import { AISecurityService } from './ai-security.service'
     OpenAIService,
     AIConsolidationService,
     AISecurityService,
+    RateLimitService,
   ],
-  exports: [AIService, AISecurityService],
+  exports: [AIService, AISecurityService, RateLimitService],
 })
 export class AIModule {}

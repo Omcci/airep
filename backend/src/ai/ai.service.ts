@@ -1,8 +1,10 @@
-import { Injectable, Logger, OnModuleInit, BadRequestException } from '@nestjs/common'
+import { Injectable, Logger, OnModuleInit, BadRequestException, HttpException, HttpStatus } from '@nestjs/common'
 import { OpenAIService } from './openai.service'
 import { AIConsolidationService } from './ai-consolidation.service'
 import { AISecurityService, SecurityCheckResult } from './ai-security.service'
+import { RateLimitService, RateLimitResult } from './rate-limit.service'
 import type { AIAnalysisRequest, AIConsolidatedResponse } from './ai.interface'
+import { AIAnalysisRequestDto, Platform, ContentType } from './dto/ai-analysis.dto'
 
 @Injectable()
 export class AIService implements OnModuleInit {
@@ -13,6 +15,7 @@ export class AIService implements OnModuleInit {
     private readonly openaiService: OpenAIService,
     private readonly aiConsolidationService: AIConsolidationService,
     private readonly aiSecurityService: AISecurityService,
+    private readonly rateLimitService: RateLimitService,
   ) {}
 
   async onModuleInit() {
@@ -28,38 +31,118 @@ export class AIService implements OnModuleInit {
   }
 
   /**
-   * Analyze content using AI with security checks
+   * Analyze content using AI with complete security pipeline
    */
-  async analyzeContent(request: AIAnalysisRequest): Promise<AIConsolidatedResponse> {
+  async analyzeContent(request: AIAnalysisRequestDto, userId: string = 'anonymous'): Promise<AIConsolidatedResponse> {
     const { content, platform, contentType } = request
 
-    // 1. Security Check
-    this.logger.log(`Starting AI analysis for ${platform} platform`)
-    const securityResult = await this.aiSecurityService.checkInputSecurity(content, platform)
-    
-    if (securityResult.blocked) {
-      this.logger.warn(`Content blocked by security service: ${securityResult.reason}`)
-      throw new BadRequestException({
-        message: 'Content blocked for security reasons',
-        reason: securityResult.reason,
-        warnings: securityResult.warnings,
-        recommendations: this.aiSecurityService.getSecurityRecommendations(securityResult)
-      })
-    }
+    try {
+      // 1. Input Validation (already done by DTO decorators)
+      this.logger.log(`Starting AI analysis for ${platform} platform`)
 
-    if (securityResult.riskLevel === 'high') {
-      this.logger.warn(`High security risk detected: ${securityResult.warnings.join(', ')}`)
-    }
+      // 2. Rate Limiting Check
+      const estimatedCost = await this.getEstimatedCost(content, platform)
+      const estimatedTokens = Math.ceil(content.length / 4) + 500 // Rough token estimation
+      
+      const rateLimitResult = await this.rateLimitService.checkRateLimit(
+        userId,
+        platform,
+        'analyze',
+        estimatedCost.estimatedCost,
+        estimatedTokens
+      )
 
-    // 2. Sanitize content
-    const sanitizedContent = this.aiSecurityService.sanitizeContent(content)
-    
-    // 3. Proceed with AI analysis
-    return this.aiConsolidationService.consolidateAnalysis({
-      content: sanitizedContent,
+      if (!rateLimitResult.allowed) {
+        throw new HttpException({
+          message: 'Rate limit exceeded',
+          reason: rateLimitResult.reason,
+          resetTime: rateLimitResult.resetTime,
+          costRemaining: rateLimitResult.costRemaining
+        }, HttpStatus.TOO_MANY_REQUESTS)
+      }
+
+      // 3. Security Check
+      const securityResult = await this.aiSecurityService.checkInputSecurity(content, platform)
+      
+      if (securityResult.blocked) {
+        // Release the rate limit slot since we're not proceeding
+        await this.rateLimitService.releaseConcurrentSlot(userId)
+        
+        this.logger.warn(`Content blocked by security service: ${securityResult.reason}`)
+        throw new BadRequestException({
+          message: 'Content blocked for security reasons',
+          reason: securityResult.reason,
+          warnings: securityResult.warnings,
+          recommendations: this.aiSecurityService.getSecurityRecommendations(securityResult)
+        })
+      }
+
+      if (securityResult.riskLevel === 'high') {
+        this.logger.warn(`High security risk detected: ${securityResult.warnings.join(', ')}`)
+      }
+
+      // 4. Sanitize content
+      const sanitizedContent = this.aiSecurityService.sanitizeContent(content)
+      
+      try {
+        // 5. Proceed with AI analysis
+        const result = await this.aiConsolidationService.consolidateAnalysis({
+          content: sanitizedContent,
+          platform,
+          contentType
+        })
+
+        this.logger.log(`AI analysis completed successfully for user ${userId}`)
+        return result
+
+      } finally {
+        // Always release the concurrent slot
+        await this.rateLimitService.releaseConcurrentSlot(userId)
+      }
+
+    } catch (error) {
+      // Release the concurrent slot on any error
+      await this.rateLimitService.releaseConcurrentSlot(userId)
+      
+      if (error instanceof HttpException || error instanceof BadRequestException) {
+        throw error
+      }
+      
+      this.logger.error(`AI analysis failed for user ${userId}:`, error.message)
+      throw new HttpException({
+        message: 'AI analysis failed',
+        error: error.message
+      }, HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  /**
+   * Check security for content without AI analysis
+   */
+  async checkContentSecurity(content: string, platform: string, userId: string = 'anonymous'): Promise<SecurityCheckResult> {
+    // Rate limiting for security checks
+    const rateLimitResult = await this.rateLimitService.checkRateLimit(
+      userId,
       platform,
-      contentType
-    })
+      'security-check',
+      0, // No cost for security checks
+      0
+    )
+
+    if (!rateLimitResult.allowed) {
+      throw new HttpException({
+        message: 'Rate limit exceeded',
+        reason: rateLimitResult.reason,
+        resetTime: rateLimitResult.resetTime
+      }, HttpStatus.TOO_MANY_REQUESTS)
+    }
+
+    try {
+      const securityResult = await this.aiSecurityService.checkInputSecurity(content, platform)
+      return securityResult
+    } finally {
+      await this.rateLimitService.releaseConcurrentSlot(userId)
+    }
   }
 
   /**
@@ -88,6 +171,33 @@ export class AIService implements OnModuleInit {
     return {
       estimatedCost: totalCost,
       currency: 'USD'
+    }
+  }
+
+  /**
+   * Get rate limit information for a user
+   */
+  async getRateLimitInfo(userId: string, platform: string): Promise<{
+    currentUsage: any
+    platformConfig: any
+    remaining: RateLimitResult
+  }> {
+    const currentUsage = this.rateLimitService.getCurrentUsage(userId)
+    const platformConfig = this.rateLimitService.getPlatformConfig(platform)
+    
+    // Check current rate limit status
+    const remaining = await this.rateLimitService.checkRateLimit(
+      userId,
+      platform,
+      'analyze',
+      0,
+      0
+    )
+
+    return {
+      currentUsage,
+      platformConfig,
+      remaining
     }
   }
 
