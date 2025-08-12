@@ -1,5 +1,8 @@
 import { Injectable, Logger, OnModuleInit, BadRequestException, HttpException, HttpStatus } from '@nestjs/common'
 import { OpenAIService } from './openai.service'
+import { AnthropicService } from './anthropic.service'
+import { MistralService } from './mistral.service'
+import { GeminiService } from './gemini.service'
 import { AIConsolidationService } from './ai-consolidation.service'
 import { AISecurityService, SecurityCheckResult } from './ai-security.service'
 import { RateLimitService, RateLimitResult } from './rate-limit.service'
@@ -13,18 +16,42 @@ export class AIService implements OnModuleInit {
 
   constructor(
     private readonly openaiService: OpenAIService,
+    private readonly anthropicService: AnthropicService,
+    private readonly mistralService: MistralService,
+    private readonly geminiService: GeminiService,
     private readonly aiConsolidationService: AIConsolidationService,
     private readonly aiSecurityService: AISecurityService,
     private readonly rateLimitService: RateLimitService,
-  ) {}
+  ) { }
 
   async onModuleInit() {
     // Initialize providers
-    if (this.openaiService.isHealthy()) {
+    if (await this.openaiService.isHealthy()) {
       this.providers.push(this.openaiService)
       this.logger.log('OpenAI service initialized successfully')
     } else {
       this.logger.warn('OpenAI service not available')
+    }
+
+    if (await this.anthropicService.isHealthy()) {
+      this.providers.push(this.anthropicService)
+      this.logger.log('Anthropic Claude service initialized successfully')
+    } else {
+      this.logger.warn('Anthropic Claude service not available')
+    }
+
+    if (await this.mistralService.isHealthy()) {
+      this.providers.push(this.mistralService)
+      this.logger.log('Mistral AI service initialized successfully')
+    } else {
+      this.logger.warn('Mistral AI service not available')
+    }
+
+    if (await this.geminiService.isHealthy()) {
+      this.providers.push(this.geminiService)
+      this.logger.log('Google Gemini service initialized successfully')
+    } else {
+      this.logger.warn('Google Gemini service not available')
     }
 
     this.logger.log(`AI Service initialized with ${this.providers.length} providers`)
@@ -43,7 +70,7 @@ export class AIService implements OnModuleInit {
       // 2. Rate Limiting Check
       const estimatedCost = await this.getEstimatedCost(content, platform)
       const estimatedTokens = Math.ceil(content.length / 4) + 500 // Rough token estimation
-      
+
       const rateLimitResult = await this.rateLimitService.checkRateLimit(
         userId,
         platform,
@@ -63,11 +90,11 @@ export class AIService implements OnModuleInit {
 
       // 3. Security Check
       const securityResult = await this.aiSecurityService.checkInputSecurity(content, platform)
-      
+
       if (securityResult.blocked) {
         // Release the rate limit slot since we're not proceeding
         await this.rateLimitService.releaseConcurrentSlot(userId)
-        
+
         this.logger.warn(`Content blocked by security service: ${securityResult.reason}`)
         throw new BadRequestException({
           message: 'Content blocked for security reasons',
@@ -83,14 +110,17 @@ export class AIService implements OnModuleInit {
 
       // 4. Sanitize content
       const sanitizedContent = this.aiSecurityService.sanitizeContent(content)
-      
+
       try {
         // 5. Proceed with AI analysis
-        const result = await this.aiConsolidationService.consolidateAnalysis({
-          content: sanitizedContent,
-          platform,
-          contentType
-        })
+        const result = await this.aiConsolidationService.consolidateAnalysis(
+          this.providers,
+          {
+            content: sanitizedContent,
+            platform,
+            contentType
+          }
+        )
 
         this.logger.log(`AI analysis completed successfully for user ${userId}`)
         return result
@@ -103,11 +133,11 @@ export class AIService implements OnModuleInit {
     } catch (error) {
       // Release the concurrent slot on any error
       await this.rateLimitService.releaseConcurrentSlot(userId)
-      
+
       if (error instanceof HttpException || error instanceof BadRequestException) {
         throw error
       }
-      
+
       this.logger.error(`AI analysis failed for user ${userId}:`, error.message)
       throw new HttpException({
         message: 'AI analysis failed',
@@ -184,7 +214,7 @@ export class AIService implements OnModuleInit {
   }> {
     const currentUsage = this.rateLimitService.getCurrentUsage(userId)
     const platformConfig = this.rateLimitService.getPlatformConfig(platform)
-    
+
     // Check current rate limit status
     const remaining = await this.rateLimitService.checkRateLimit(
       userId,
