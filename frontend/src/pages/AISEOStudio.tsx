@@ -57,7 +57,6 @@ export default function AISEOStudio() {
         onSuccess: () => {
             setSuccessMessage('Content optimization completed! Opening results...')
             setShowSuccessNotification(true)
-            setBottomDrawerOpen(true)
             // Auto-advance to preview step after optimization
             setTimeout(() => setCurrentStep('preview'), 500)
         }
@@ -68,7 +67,6 @@ export default function AISEOStudio() {
         onSuccess: () => {
             setSuccessMessage('Tool optimization completed! Opening results...')
             setShowSuccessNotification(true)
-            setBottomDrawerOpen(true)
             // Auto-advance to preview step after tool optimization
             setTimeout(() => setCurrentStep('preview'), 500)
         }

@@ -120,21 +120,9 @@ export default function BottomDrawer({
             <Sheet open={isOpen} onOpenChange={onToggle}>
                 <SheetContent
                     side="bottom"
-                    className="h-[85vh] max-h-[85vh] overflow-hidden rounded-t-3xl border-t-2 border-gray-200 dark:border-gray-700 [&>button]:hidden"
+                    className="h-[85vh] max-h-[85vh] overflow-hidden rounded-t-3xl border-t-2 border-gray-200 dark:border-gray-700"
                     onOpenAutoFocus={(e) => e.preventDefault()}
                 >
-                    {/* Toggle area at the top - click to close */}
-                    <div
-                        className="cursor-pointer p-2 -m-2 mb-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                        onClick={onToggle}
-                    >
-                        <div className="flex items-center justify-center gap-2 text-gray-500 dark:text-gray-400">
-                            <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-                            <span className="text-sm">Click to close</span>
-                            <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-                        </div>
-                    </div>
-
                     <SheetHeader className="border-b pb-4">
                         <SheetTitle className="flex items-center gap-2">
                             <span className="text-lg">{platformInfo.icon}</span>
