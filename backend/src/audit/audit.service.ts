@@ -2,16 +2,6 @@ import { Injectable } from '@nestjs/common'
 
 @Injectable()
 export class AuditService {
-    async evaluateUrl(url: string) {
-        try {
-            const res = await fetch(url)
-            const html = await res.text()
-            return this.evaluateContent(html)
-        } catch {
-            throw new Error('Failed to fetch URL')
-        }
-    }
-
     async evaluateContent(content: string, platform: string = 'blog') {
         const metrics = this.evaluateText(content, platform)
         const score = this.computeScore(metrics, platform)

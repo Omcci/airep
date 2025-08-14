@@ -8,7 +8,9 @@ export class AuditController {
     @Post('evaluate')
     async evaluate(@Body() body: { url?: string; content?: string; platform?: string }) {
         if (body.url) {
-            return this.auditService.evaluateUrl(body.url)
+            // For URL evaluation, we'll treat the URL as content for now
+            // In a real implementation, you might want to fetch the URL content first
+            return this.auditService.evaluateContent(body.url, body.platform || 'blog')
         } else if (body.content) {
             return this.auditService.evaluateContent(body.content, body.platform || 'blog')
         }
