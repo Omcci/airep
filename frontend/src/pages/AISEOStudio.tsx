@@ -191,31 +191,6 @@ export default function AISEOStudio() {
                 {/* Step 3: Preview - Show inline when ready */}
                 {currentStep === 'preview' && (optimizeMutation.data || boostToolMutation.data) && (
                     <div ref={previewRef}>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Sparkles className="h-5 w-5" />
-                                    Optimization Complete!
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="text-center space-y-4">
-                                    <h3 className="text-lg font-semibold">Content Analysis & Optimization Complete</h3>
-                                    <p className="text-muted-foreground">
-                                        Your content has been analyzed and optimized for {platform === 'linkedin' ? 'LinkedIn' : platform === 'twitter' ? 'X/Twitter' : platform === 'blog' ? 'blog' : 'email'}.
-                                        Click the button below to view the results and copy the optimized content.
-                                    </p>
-                                    <Button
-                                        onClick={() => setBottomDrawerOpen(true)}
-                                        size="lg"
-                                        className="px-8"
-                                    >
-                                        <Sparkles className="w-4 h-4 mr-2" />
-                                        View Results & Copy Content
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
                     </div>
                 )}
             </div>
