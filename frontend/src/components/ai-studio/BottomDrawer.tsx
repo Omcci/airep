@@ -103,7 +103,14 @@ export default function BottomDrawer({
         if (contentType === 'tool') {
             return tool?.description || tool?.tagline || 'No tool description available'
         }
-        return optimizationResult?.original?.content || 'No original content available'
+        // For content optimization, get from the original input
+        if (contentType === 'content') {
+            return optimizationResult?.originalContent || 'No original content available'
+        }
+        if (contentType === 'url') {
+            return optimizationResult?.originalContent || 'No original content available'
+        }
+        return 'No original content available'
     }
 
     const content = getOptimizedContent()
@@ -237,20 +244,38 @@ export default function BottomDrawer({
                                 {/* Original Content */}
                                 <div className="space-y-2">
                                     <h4 className="text-sm font-medium text-muted-foreground">Original Content</h4>
-                                    <div className="bg-muted/30 rounded-lg p-3 border max-h-40 overflow-auto">
+                                    <div className="bg-muted/30 rounded-lg p-3 border max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
                                         <pre className="whitespace-pre-wrap text-sm text-foreground">
                                             {originalContent}
                                         </pre>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            onClick={() => copyToClipboard(originalContent)}
+                                            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+                                            title="Copy original content"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 </div>
 
                                 {/* Optimized Content */}
                                 <div className="space-y-2">
                                     <h4 className="text-sm font-medium text-muted-foreground">Optimized Content</h4>
-                                    <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 border border-green-200 dark:border-green-800 max-h-40 overflow-auto">
+                                    <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 border border-green-200 dark:border-green-800 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-green-300 dark:scrollbar-thumb-green-600 scrollbar-track-transparent">
                                         <pre className="whitespace-pre-wrap text-sm text-foreground">
                                             {content}
                                         </pre>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            onClick={() => copyToClipboard(content)}
+                                            className="p-2 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors"
+                                            title="Copy optimized content"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -258,23 +283,6 @@ export default function BottomDrawer({
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-2 pt-4 border-t">
-                            <Button
-                                onClick={() => copyToClipboard(content)}
-                                className="flex-1"
-                                variant="default"
-                            >
-                                <Copy className="h-4 w-4 mr-2" />
-                                Copy Optimized Content
-                            </Button>
-
-                            <Button
-                                onClick={() => copyToClipboard(originalContent)}
-                                variant="outline"
-                            >
-                                <Copy className="h-4 w-4 mr-2" />
-                                Copy Original
-                            </Button>
-
                             <Button
                                 variant="outline"
                                 onClick={() => {
@@ -290,43 +298,6 @@ export default function BottomDrawer({
                                 <Download className="h-4 w-4 mr-2" />
                                 Download
                             </Button>
-                        </div>
-
-                        {/* Platform-specific tips */}
-                        <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200 dark:border-blue-800">
-                            <h4 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
-                                💡 {platformInfo.name} Optimization Tips
-                            </h4>
-                            <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
-                                {platform === 'linkedin' && (
-                                    <>
-                                        <li>• Use professional language and industry-specific terms</li>
-                                        <li>• Include relevant hashtags for discoverability</li>
-                                        <li>• Keep paragraphs short and scannable</li>
-                                    </>
-                                )}
-                                {platform === 'twitter' && (
-                                    <>
-                                        <li>• Optimize for character limits</li>
-                                        <li>• Use engaging hooks and clear calls-to-action</li>
-                                        <li>• Include relevant hashtags and mentions</li>
-                                    </>
-                                )}
-                                {platform === 'blog' && (
-                                    <>
-                                        <li>• Structure with clear headings and subheadings</li>
-                                        <li>• Include meta descriptions and keywords</li>
-                                        <li>• Optimize for readability and SEO</li>
-                                    </>
-                                )}
-                                {platform === 'email' && (
-                                    <>
-                                        <li>• Use clear subject lines and greetings</li>
-                                        <li>• Keep content concise and actionable</li>
-                                        <li>• Include professional signatures</li>
-                                    </>
-                                )}
-                            </ul>
                         </div>
                     </div>
                 </SheetContent>
