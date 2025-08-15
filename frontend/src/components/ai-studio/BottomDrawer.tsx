@@ -33,15 +33,55 @@ export default function BottomDrawer({
     const getPlatformInfo = () => {
         switch (platform) {
             case 'linkedin':
-                return { name: 'LinkedIn', icon: '💼', color: 'text-blue-600' }
+                return {
+                    name: 'LinkedIn',
+                    icon: (
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                    ),
+                    color: 'text-blue-600 dark:text-blue-400'
+                }
             case 'twitter':
-                return { name: 'X/Twitter', icon: '🐦', color: 'text-blue-400' }
+                return {
+                    name: 'X/Twitter',
+                    icon: (
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                        </svg>
+                    ),
+                    color: 'text-gray-900 dark:text-gray-100'
+                }
             case 'blog':
-                return { name: 'Blog/Website', icon: '📝', color: 'text-green-600' }
+                return {
+                    name: 'Blog/Website',
+                    icon: (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                        </svg>
+                    ),
+                    color: 'text-green-600 dark:text-green-400'
+                }
             case 'email':
-                return { name: 'Email', icon: '📧', color: 'text-purple-600' }
+                return {
+                    name: 'Email',
+                    icon: (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    ),
+                    color: 'text-purple-600 dark:text-purple-400'
+                }
             default:
-                return { name: 'Platform', icon: '🌐', color: 'text-gray-600' }
+                return {
+                    name: 'Platform',
+                    icon: (
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                    ),
+                    color: 'text-gray-600 dark:text-gray-400'
+                }
         }
     }
 
@@ -88,29 +128,47 @@ export default function BottomDrawer({
                 className="fixed bottom-0 left-0 right-0 z-40 cursor-pointer"
                 onClick={onToggle}
             >
-                <div className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 rounded-t-2xl shadow-lg mx-4 mb-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                    <div className="flex items-center justify-between">
+                <div className="bg-slate-700/80 dark:bg-slate-800/80 border border-slate-600 dark:border-slate-700/50 rounded-t-2xl shadow-2xl mx-4 mb-4 p-4 hover:bg-slate-600/90 dark:hover:bg-slate-700/90 transition-all duration-300 overflow-hidden">
+                    {/* Animated arrow in center top */}
+                    <div className="absolute top-2 left-1/2 transform -translate-x-1/2 -translate-y-full z-10">
+                        <div className="animate-bounce">
+                            <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div className="relative z-10 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <span className="text-2xl">{platformInfo.icon}</span>
+                            <div className="w-6 h-6 bg-slate-600 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                                {platformInfo.icon}
+                            </div>
                             <div>
-                                <div className="font-medium text-gray-900 dark:text-gray-100">
+                                <div className="font-medium text-white">
                                     {platformInfo.name} Optimization Results
                                 </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                <div className="text-sm text-slate-300">
                                     Click to view and copy optimized content
                                 </div>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             <div className="text-right">
-                                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                <div className="text-sm font-medium text-white">
                                     Score: {originalScore}/100 → {potentialScore}/100
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                <div className="text-xs text-slate-300">
                                     +{potentialScore - originalScore} points
                                 </div>
                             </div>
-                            <ChevronUp className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                            <div className="flex flex-col items-center gap-1">
+                                <div className="text-white text-xs font-medium">Click to view</div>
+                                <div className="w-4 h-4 bg-slate-600 dark:bg-slate-700 rounded-full flex items-center justify-center">
+                                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
