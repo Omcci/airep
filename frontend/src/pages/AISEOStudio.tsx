@@ -242,6 +242,7 @@ export default function AISEOStudio() {
                     optimizationResult={contentType === 'tool' ? boostToolMutation.data : optimizeMutation.data}
                     tool={tool}
                     analysisData={auditMutation.data}
+                    originalContent={contentType === 'tool' ? tool.description || tool.tagline : contentType === 'content' ? content : url}
                 />
             )}
         </div>
