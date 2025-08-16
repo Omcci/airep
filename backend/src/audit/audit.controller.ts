@@ -1,5 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common'
-import { AuditService } from './audit.service';
+import { AuditService } from './audit.service'
+import { Tone } from '../ai/dto/ai-analysis.dto'
 
 @Controller('audit')
 export class AuditController {
@@ -18,9 +19,21 @@ export class AuditController {
     }
 
     @Post('optimize')
-    async optimizeContent(@Body() body: { content: string; platform?: string }) {
-        const { content, platform = 'blog' } = body
-        return this.auditService.optimizeContent(content, platform)
+    async optimizeContent(@Body() body: { content: string; platform?: string; tone?: Tone }) {
+        const { content, platform = 'blog', tone = Tone.PROFESSIONAL } = body
+        return this.auditService.optimizeContent(content, platform, tone)
+    }
+
+    @Post('tone-variation')
+    async generateToneVariation(@Body() body: { content: string; platform: string; tone: Tone }) {
+        const { content, platform, tone } = body
+        return this.auditService.optimizeContent(content, platform, tone)
+    }
+
+    @Post('redo-optimization')
+    async redoOptimization(@Body() body: { content: string; platform: string; tone?: Tone }) {
+        const { content, platform, tone = Tone.PROFESSIONAL } = body
+        return this.auditService.optimizeContent(content, platform, tone)
     }
 }
 

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common'
+import { AIService } from '../ai/ai.service'
+import { Platform, ContentType, Tone } from '../ai/dto/ai-analysis.dto'
 
 @Injectable()
 export class AuditService {
+    constructor(private readonly aiService: AIService) { }
+
     async evaluateContent(content: string, platform: string = 'blog') {
         const metrics = this.evaluateText(content, platform)
         const score = this.computeScore(metrics, platform)
@@ -11,15 +15,47 @@ export class AuditService {
         return { score, details, recommendations, platform }
     }
 
-    async optimizeContent(content: string, platform: string = 'blog') {
-        const analysis = await this.evaluateContent(content, platform)
-        const optimized = this.generateOptimizedVersion(content, analysis.details, platform)
+    async optimizeContent(content: string, platform: string = 'blog', tone: Tone = Tone.PROFESSIONAL) {
+        try {
+            // Use real AI service for optimization
+            const aiRequest = {
+                content,
+                platform: platform as Platform,
+                contentType: ContentType.CONTENT,
+                tone,
+                validatedContent: content // This is computed by the DTO transform
+            }
 
-        return {
-            original: analysis,
-            optimized: {
-                content: optimized,
-                improvements: this.getImprovementSuggestions(analysis.details)
+            const aiResult = await this.aiService.analyzeContent(aiRequest, 'anonymous')
+
+            // Extract optimized content from AI result
+            const optimizedContent = this.extractOptimizedContent(aiResult, content, platform, tone)
+
+            const analysis = await this.evaluateContent(content, platform)
+
+            return {
+                originalContent: content,
+                original: analysis,
+                optimized: {
+                    content: optimizedContent,
+                    improvements: this.getImprovementSuggestions(analysis.details),
+                    tone: tone
+                }
+            }
+        } catch (error) {
+            console.error('AI optimization failed, falling back to template:', error)
+            // Fallback to template-based optimization
+            const analysis = await this.evaluateContent(content, platform)
+            const optimized = this.generateOptimizedVersion(content, analysis.details, platform, tone)
+
+            return {
+                originalContent: content,
+                original: analysis,
+                optimized: {
+                    content: optimized,
+                    improvements: this.getImprovementSuggestions(analysis.details),
+                    tone: tone
+                }
             }
         }
     }
@@ -459,66 +495,46 @@ export class AuditService {
         }
     }
 
-    private generateOptimizedVersion(content: string, details: any, platform: string) {
+    private generateOptimizedVersion(content: string, details: any, platform: string, tone: Tone) {
         // This would integrate with an AI service to generate optimized content
         // For now, return a template with suggestions
 
         if (platform === 'linkedin') {
-            return this.generateLinkedInOptimized(content, details)
+            return this.generateLinkedInOptimized(content, details, tone)
         } else if (platform === 'twitter') {
-            return this.generateTwitterOptimized(content, details)
+            return this.generateTwitterOptimized(content, details, tone)
         } else if (platform === 'email') {
-            return this.generateEmailOptimized(content, details)
+            return this.generateEmailOptimized(content, details, tone)
         } else {
-            return this.generateBlogOptimized(content, details)
+            return this.generateBlogOptimized(content, details, tone)
         }
     }
 
-    private generateLinkedInOptimized(content: string, details: any) {
+    private generateLinkedInOptimized(content: string, details: any, tone: Tone) {
         // LinkedIn optimization: analyze actual content and generate relevant optimization
+        let optimized = content
 
-        // If content is too short or meaningless, provide guidance instead of generic content
-        if (content.length < 10 || !this.hasMeaningfulContent(content)) {
-            return `🚀 Content Optimization Needed
-
-Your content "${content}" is too short for effective LinkedIn optimization.
-
-📝 To create engaging LinkedIn content, try:
-• Share a specific experience or insight (50+ words)
-• Include concrete examples or data
-• Ask thought-provoking questions
-• Share professional lessons learned
-
-💡 Example structure:
-"I recently discovered [specific insight] while working on [project]. This taught me [lesson] and made me realize [broader implication]. What's your experience with this?"
-
-#ContentCreation #ProfessionalDevelopment #LinkedInTips`
+        // Add tone-based modifications
+        switch (tone) {
+            case Tone.PROFESSIONAL:
+                optimized = `💼 Professional LinkedIn Post\n\n${content}\n\n#ProfessionalDevelopment #CareerGrowth #LinkedInTips`
+                break
+            case Tone.CASUAL:
+                optimized = `😊 Casual LinkedIn Share\n\n${content}\n\n#CasualNetworking #RealTalk #LinkedInCommunity`
+                break
+            case Tone.FUNNY:
+                optimized = `😂 Funny LinkedIn Moment\n\n${content}\n\n#LinkedInHumor #WorkLife #FunnyBusiness`
+                break
+            case Tone.HARSH:
+                optimized = `⚡ Direct LinkedIn Truth\n\n${content}\n\n#BrutalHonesty #LinkedInReality #NoFilter`
+                break
+            case Tone.FRIENDLY:
+                optimized = `🤗 Friendly LinkedIn Post\n\n${content}\n\n#LinkedInFriends #SupportiveCommunity #PositiveVibes`
+                break
+            case Tone.FORMAL:
+                optimized = `📋 Formal LinkedIn Analysis\n\n${content}\n\n#FormalBusiness #ProfessionalStandards #LinkedInExcellence`
+                break
         }
-
-        // Extract actual insights from the content
-        const keyInsights = this.extractKeyInsights(content)
-        const professionalBenefits = this.extractProfessionalBenefits(content)
-        const industryImpact = this.extractIndustryImpact(content)
-
-        // Create LinkedIn post based on actual content analysis
-        const optimized = `🚀 ${this.generateHook(content)}
-
-📊 EXECUTIVE SUMMARY:
-${keyInsights}
-
-💼 PROFESSIONAL IMPACT:
-${professionalBenefits}
-
-🏢 INDUSTRY TRANSFORMATION:
-${industryImpact}
-
-🔮 STRATEGIC IMPLICATIONS:
-${this.generateStrategicInsights(content)}
-
-💭 ENGAGEMENT QUESTIONS:
-${this.generateEngagementQuestions(content)}
-
-#${this.generateRelevantHashtags(content)}`
 
         return optimized
     }
@@ -823,59 +839,132 @@ ${this.generateEngagementQuestions(content)}
         return hashtags.join(' #')
     }
 
-    private generateTwitterOptimized(content: string, details: any) {
+    private generateTwitterOptimized(content: string, details: any, tone: Tone) {
         // Twitter optimization: character limits, engagement hooks, thread structure
         let optimized = content
 
-        // Add summary if missing
-        if (!details.summary) {
-            optimized = `📊 Key Points:\n${this.extractKeyPoints(content)}`
+        // Add tone-based modifications
+        switch (tone) {
+            case Tone.PROFESSIONAL:
+                optimized = `📊 Professional Insights:\n\n${content}\n\n#Professional #Business #Insights`
+                break
+            case Tone.CASUAL:
+                optimized = `😊 Quick thought:\n\n${content}\n\n#Casual #Thoughts #Sharing`
+                break
+            case Tone.FUNNY:
+                optimized = `😂 The funny side:\n\n${content}\n\n#Funny #Humor #Laughs`
+                break
+            case Tone.HARSH:
+                optimized = `⚡ Reality check:\n\n${content}\n\n#Harsh #Truth #Reality`
+                break
+            case Tone.FRIENDLY:
+                optimized = `🤗 Friendly reminder:\n\n${content}\n\n#Friendly #Support #Community`
+                break
+            case Tone.FORMAL:
+                optimized = `📋 Formal analysis:\n\n${content}\n\n#Formal #Analysis #Research`
+                break
         }
-
-        // Add engagement hook
-        optimized += '\n\n💭 What\'s your take? RT if you agree!'
-
-        // Add relevant hashtags
-        optimized += '\n\n#AI #Tech #Innovation'
 
         return optimized
     }
 
-    private generateEmailOptimized(content: string, details: any) {
+    private generateEmailOptimized(content: string, details: any, tone: Tone) {
         // Email optimization: clear structure, call-to-action, personalization
         let optimized = content
 
-        // Add greeting if missing
-        if (!content.toLowerCase().includes('hello') && !content.toLowerCase().includes('hi')) {
-            optimized = `Hello,\n\n${optimized}`
+        // Add tone-based modifications
+        switch (tone) {
+            case Tone.PROFESSIONAL:
+                optimized = `Subject: Professional Update\n\nDear Team,\n\n${content}\n\nBest regards,\n[Your Name]`
+                break
+            case Tone.CASUAL:
+                optimized = `Subject: Quick Update\n\nHey everyone!\n\n${content}\n\nCheers,\n[Your Name]`
+                break
+            case Tone.FUNNY:
+                optimized = `Subject: Funny Story\n\nHi team,\n\n${content}\n\nLaughing all the way,\n[Your Name]`
+                break
+            case Tone.HARSH:
+                optimized = `Subject: Direct Feedback\n\nTeam,\n\n${content}\n\nNo sugar coating,\n[Your Name]`
+                break
+            case Tone.FRIENDLY:
+                optimized = `Subject: Friendly Update\n\nHi friends,\n\n${content}\n\nWarm regards,\n[Your Name]`
+                break
+            case Tone.FORMAL:
+                optimized = `Subject: Formal Communication\n\nDear Colleagues,\n\n${content}\n\nSincerely,\n[Your Name]`
+                break
         }
-
-        // Add call-to-action if missing
-        if (!details.conversational) {
-            optimized += '\n\nWhat are your thoughts on this? I\'d love to hear from you!'
-        }
-
-        // Add signature
-        optimized += '\n\nBest regards,\n[Your Name]'
 
         return optimized
     }
 
-    private generateBlogOptimized(content: string, details: any) {
+    private generateBlogOptimized(content: string, details: any, tone: Tone) {
         // Blog optimization: full HTML, structured data, SEO elements
         let optimized = content
 
-        // Add summary if missing
-        if (!details.summary) {
-            optimized = `<h2>Summary</h2>\n<p>${this.extractKeyPoints(content)}</p>\n\n${optimized}`
-        }
-
-        // Add FAQ section if missing
-        if (!details.faq) {
-            optimized += '\n\n<h2>Frequently Asked Questions</h2>\n<div itemscope itemtype="https://schema.org/FAQPage">\n  <div itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">\n    <h3 itemprop="name">[Common question 1]</h3>\n    <div itemscope itemprop="acceptedAnswer" itemtype="https://schema.org/Answer">\n      <div itemprop="text">[AI-generated answer]</div>\n    </div>\n  </div>\n</div>'
+        // Add tone-based modifications
+        switch (tone) {
+            case Tone.PROFESSIONAL:
+                optimized = `<h1>Professional Analysis: ${content}</h1>\n\n<p>This comprehensive analysis provides professional insights and industry-standard recommendations.</p>\n\n<h2>Key Findings</h2>\n<p>${content}</p>`
+                break
+            case Tone.CASUAL:
+                optimized = `<h1>Casual Take: ${content}</h1>\n\n<p>Here's my relaxed, easy-going perspective on this topic.</p>\n\n<h2>What I Think</h2>\n<p>${content}</p>`
+                break
+            case Tone.FUNNY:
+                optimized = `<h1>Funny Version: ${content}</h1>\n\n<p>Let's add some humor to this serious topic!</p>\n\n<h2>The Humorous Side</h2>\n<p>${content}</p>`
+                break
+            case Tone.HARSH:
+                optimized = `<h1>Direct & Harsh: ${content}</h1>\n\n<p>No sugar coating here - just the brutal truth.</p>\n\n<h2>The Reality</h2>\n<p>${content}</p>`
+                break
+            case Tone.FRIENDLY:
+                optimized = `<h1>Friendly Approach: ${content}</h1>\n\n<p>Let's approach this with kindness and understanding.</p>\n\n<h2>With Warmth</h2>\n<p>${content}</p>`
+                break
+            case Tone.FORMAL:
+                optimized = `<h1>Formal Analysis: ${content}</h1>\n\n<p>This structured assessment follows academic and professional standards.</p>\n\n<h2>Structured Assessment</h2>\n<p>${content}</p>`
+                break
         }
 
         return optimized
+    }
+
+    private extractOptimizedContent(aiResult: any, originalContent: string, platform: string, tone: Tone): string {
+        // Extract the optimized content from AI service response
+        if (aiResult && aiResult.consensus && aiResult.consensus.optimization) {
+            return aiResult.consensus.optimization
+        }
+
+        if (aiResult && aiResult.consensus && aiResult.consensus.content) {
+            return aiResult.consensus.content
+        }
+
+        // Fallback: generate based on tone and platform
+        return this.generateToneBasedContent(originalContent, platform, tone)
+    }
+
+    private generateToneBasedContent(content: string, platform: string, tone: Tone): string {
+        const baseContent = content.trim()
+
+        switch (tone) {
+            case Tone.PROFESSIONAL:
+                return `📊 Professional Analysis: ${baseContent}\n\n💼 Key Insights:\n• Professional tone maintained\n• Industry-specific terminology used\n• Clear structure and formatting\n\n🎯 Recommendations:\n• Consider adding relevant hashtags\n• Include call-to-action elements\n• Maintain professional credibility`
+
+            case Tone.CASUAL:
+                return `😊 Casual Take: ${baseContent}\n\n✨ What I Think:\n• Keeping it real and relatable\n• Easy to understand language\n• Friendly and approachable tone\n\n💡 Ideas:\n• Add some personality\n• Make it conversational\n• Keep it light and engaging`
+
+            case Tone.FUNNY:
+                return `😂 Funny Version: ${baseContent}\n\n🤪 The Humorous Side:\n• Adding some humor and wit\n• Making it entertaining\n• Keeping it fun while informative\n\n🎭 Suggestions:\n• Include relevant memes or jokes\n• Make it shareable and viral\n• Don't take it too seriously`
+
+            case Tone.HARSH:
+                return `⚡ Direct & Harsh: ${baseContent}\n\n💥 The Truth:\n• No sugar coating here\n• Direct and to the point\n• Cutting through the BS\n\n🔪 Reality Check:\n• Face the facts head-on\n• Be brutally honest\n• Get to the point quickly`
+
+            case Tone.FRIENDLY:
+                return `🤗 Friendly Approach: ${baseContent}\n\n💝 With Kindness:\n• Warm and welcoming tone\n• Supportive and encouraging\n• Building positive connections\n\n❤️ Friendly Tips:\n• Show empathy and understanding\n• Be encouraging and supportive\n• Create a welcoming atmosphere`
+
+            case Tone.FORMAL:
+                return `📋 Formal Analysis: ${baseContent}\n\n🏛️ Structured Assessment:\n• Academic and formal language\n• Professional terminology\n• Structured and organized format\n\n📚 Formal Recommendations:\n• Use proper citations\n• Maintain academic standards\n• Follow formal writing conventions`
+
+            default:
+                return baseContent
+        }
     }
 
     private extractKeyPoints(content: string): string {
