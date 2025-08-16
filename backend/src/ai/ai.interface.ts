@@ -2,6 +2,7 @@ export interface AIAnalysisRequest {
   content: string
   platform: 'linkedin' | 'twitter' | 'blog' | 'email'
   contentType: 'content' | 'tool' | 'url'
+  tone?: 'professional' | 'casual' | 'funny' | 'harsh' | 'friendly' | 'formal'
   maxTokens?: number
   temperature?: number
 }

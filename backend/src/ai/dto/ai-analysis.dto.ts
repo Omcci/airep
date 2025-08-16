@@ -13,6 +13,15 @@ export enum ContentType {
     URL = 'url'
 }
 
+export enum Tone {
+    PROFESSIONAL = 'professional',
+    CASUAL = 'casual',
+    FUNNY = 'funny',
+    HARSH = 'harsh',
+    FRIENDLY = 'friendly',
+    FORMAL = 'formal'
+}
+
 export class AIAnalysisRequestDto {
     @IsNotEmpty({ message: 'Content is required' })
     @IsString({ message: 'Content must be a string' })
@@ -39,6 +48,12 @@ export class AIAnalysisRequestDto {
         message: 'Content type must be either "content" or "url"'
     })
     contentType: ContentType
+
+    @IsOptional()
+    @IsEnum(Tone, {
+        message: 'Tone must be one of: professional, casual, funny, harsh, friendly, formal'
+    })
+    tone?: Tone
 
     @IsOptional()
     @IsUrl({}, { message: 'URL must be a valid URL format' })
