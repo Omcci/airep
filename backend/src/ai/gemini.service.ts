@@ -113,7 +113,42 @@ export class GeminiService implements AIProvider {
         hashtags: string[]
         engagement: string[]
     }> {
-        const { content, platform } = request
+        const { content, platform, tone } = request
+
+        const toneModifiers = {
+            professional: {
+                prefix: '💼 Professional',
+                style: 'business-like and authoritative',
+                hashtags: ['Professional', 'Business', 'Leadership']
+            },
+            casual: {
+                prefix: '😊 Casual',
+                style: 'relaxed and conversational',
+                hashtags: ['Casual', 'Conversation', 'Relaxed']
+            },
+            funny: {
+                prefix: '😂 Funny',
+                style: 'humorous and entertaining',
+                hashtags: ['Funny', 'Humor', 'Entertainment']
+            },
+            harsh: {
+                prefix: '⚡ Direct',
+                style: 'blunt and brutally honest',
+                hashtags: ['Direct', 'Honest', 'Reality']
+            },
+            friendly: {
+                prefix: '🤗 Friendly',
+                style: 'warm and supportive',
+                hashtags: ['Friendly', 'Support', 'Community']
+            },
+            formal: {
+                prefix: '📋 Formal',
+                style: 'academic and structured',
+                hashtags: ['Formal', 'Academic', 'Research']
+            }
+        }
+
+        const toneModifier = toneModifiers[tone || 'professional']
 
         const platformSpecific = {
             linkedin: {
@@ -127,8 +162,8 @@ export class GeminiService implements AIProvider {
                     'Add industry benchmarks and comparisons',
                     'Use more professional storytelling techniques'
                 ],
-                optimization: `🚀 ${this.generateLinkedInOptimization(content)}`,
-                hashtags: ['ProfessionalDevelopment', 'IndustryInsights', 'CareerGrowth'],
+                optimization: `${toneModifier.prefix} LinkedIn Post\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #LinkedInTips`,
+                hashtags: [...toneModifier.hashtags, 'ProfessionalDevelopment', 'IndustryInsights', 'CareerGrowth'],
                 engagement: [
                     'Share professional challenges and solutions',
                     'Ask for industry insights and experiences',
@@ -146,50 +181,50 @@ export class GeminiService implements AIProvider {
                     'Include a thought-provoking question',
                     'Keep it under 280 characters for optimal engagement'
                 ],
-                optimization: `🔥 ${this.generateTwitterOptimization(content)}`,
-                hashtags: ['Trending', 'Engagement', 'Discussion'],
+                optimization: `${toneModifier.prefix} Tweet\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #TwitterTips`,
+                hashtags: [...toneModifier.hashtags, 'Trending', 'ThoughtLeadership', 'Engagement'],
                 engagement: [
-                    'Ask for audience opinions and thoughts',
-                    'Encourage retweets and discussion',
-                    'Tag relevant industry leaders and accounts'
+                    'Ask for opinions and experiences',
+                    'Encourage discussion and sharing',
+                    'Tag relevant industry leaders'
                 ]
             },
             blog: {
                 insights: [
-                    'Content has good structure and readability',
+                    'Content has good structure and flow',
                     'Could benefit from more SEO optimization',
                     'Good use of headings and formatting'
                 ],
                 recommendations: [
                     'Add meta descriptions and tags',
                     'Include internal and external links',
-                    'Optimize for target keywords and phrases'
+                    'Optimize for target keywords'
                 ],
-                optimization: `📝 ${this.generateBlogOptimization(content)}`,
-                hashtags: ['SEO', 'ContentMarketing', 'DigitalMarketing'],
+                optimization: `<h1>${toneModifier.prefix} Analysis</h1>\n\n<p>${content}</p>\n\n<p>This content has been optimized with a ${toneModifier.style} approach.</p>`,
+                hashtags: [...toneModifier.hashtags, 'SEO', 'ContentStrategy', 'DigitalMarketing'],
                 engagement: [
-                    'Add social sharing buttons and options',
-                    'Include author information and bio',
-                    'Add related content suggestions and links'
+                    'Add social sharing options',
+                    'Include author information',
+                    'Add related content suggestions'
                 ]
             },
             email: {
                 insights: [
                     'Content is clear and professional',
-                    'Good email formatting and structure',
-                    'Could benefit from more personalization'
+                    'Good email formatting',
+                    'Could benefit from personalization'
                 ],
                 recommendations: [
-                    'Add personalized greetings and salutations',
-                    'Include clear call-to-action statements',
-                    'Use email-friendly formatting and layout'
+                    'Add personalized greetings',
+                    'Include clear call-to-action',
+                    'Use email-friendly formatting'
                 ],
-                optimization: `📧 ${this.generateEmailOptimization(content)}`,
-                hashtags: ['EmailMarketing', 'Professional', 'Communication'],
+                optimization: `Subject: ${toneModifier.prefix} Update\n\nHi Team,\n\n${content}\n\nBest regards,\n[Your Name]`,
+                hashtags: [...toneModifier.hashtags, 'EmailMarketing', 'Professional', 'Communication'],
                 engagement: [
-                    'Add personal signature and contact details',
-                    'Include relevant contact information',
-                    'Add unsubscribe option for compliance'
+                    'Add personal signature',
+                    'Include contact details',
+                    'Add unsubscribe option'
                 ]
             }
         }

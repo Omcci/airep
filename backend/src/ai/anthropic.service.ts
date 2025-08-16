@@ -68,24 +68,36 @@ export class AnthropicService implements AIProvider {
         try {
             this.logger.log(`Starting Anthropic Claude analysis for ${request.platform} platform`)
 
-            // For now, return a mock response since we need to install @anthropic-ai/sdk
-            // TODO: Implement actual Anthropic API calls
-            const mockResponse = await this.generateMockResponse(request)
+            // Build the prompt for Claude
+            const prompt = this.buildPrompt(request)
 
+            // Make real API call to Anthropic Claude
+            const response = await this.client.messages.create({
+                model: 'claude-3-5-sonnet-20241022',
+                max_tokens: request.maxTokens || 4000,
+                temperature: request.temperature || 0.7,
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ]
+            })
+
+            const aiResponse = response.content[0]?.text
+            if (!aiResponse) {
+                throw new Error('No response from Anthropic Claude')
+            }
+
+            // Parse the AI response
+            const analysis = this.parseResponse(aiResponse)
             const responseTime = Date.now() - startTime
             const estimatedTokens = Math.ceil(request.content.length / 4) + 500
 
             return {
                 provider: 'Anthropic Claude',
                 model: 'claude-3-5-sonnet-20241022',
-                analysis: {
-                    score: Math.floor(Math.random() * 15) + 85, // 85-100
-                    insights: mockResponse.insights,
-                    recommendations: mockResponse.recommendations,
-                    optimization: mockResponse.optimization,
-                    hashtags: mockResponse.hashtags,
-                    engagement: mockResponse.engagement
-                },
+                analysis,
                 metadata: {
                     tokensUsed: estimatedTokens,
                     cost: estimatedTokens * 0.000003, // Anthropic pricing
@@ -108,154 +120,79 @@ export class AnthropicService implements AIProvider {
         return 200000 // Anthropic Claude 3.5 Sonnet context window
     }
 
-    private async generateMockResponse(request: AIAnalysisRequest): Promise<{
-        insights: string[]
-        recommendations: string[]
-        optimization: string
-        hashtags: string[]
-        engagement: string[]
-    }> {
-        const { content, platform } = request
-
-        const platformSpecific = {
-            linkedin: {
-                insights: [
-                    'Content shows strong professional expertise',
-                    'Good use of industry-specific language',
-                    'Could benefit from more data-driven insights'
-                ],
-                recommendations: [
-                    'Include specific metrics or KPIs',
-                    'Add industry benchmarks',
-                    'Use more professional storytelling'
-                ],
-                optimization: `🚀 ${this.generateLinkedInOptimization(content)}`,
-                hashtags: ['ProfessionalGrowth', 'IndustryLeadership', 'CareerAdvancement'],
-                engagement: [
-                    'Share professional challenges',
-                    'Ask for industry insights',
-                    'Encourage professional networking'
-                ]
-            },
-            twitter: {
-                insights: [
-                    'Content is engaging and shareable',
-                    'Good conversational tone',
-                    'Could benefit from trending topics'
-                ],
-                recommendations: [
-                    'Add current trending hashtags',
-                    'Include a thought-provoking question',
-                    'Keep it under 280 characters'
-                ],
-                optimization: `🔥 ${this.generateTwitterOptimization(content)}`,
-                hashtags: ['Trending', 'ThoughtLeadership', 'Engagement'],
-                engagement: [
-                    'Ask for opinions',
-                    'Encourage discussion',
-                    'Tag industry leaders'
-                ]
-            },
-            blog: {
-                insights: [
-                    'Content has good structure and flow',
-                    'Could benefit from more SEO optimization',
-                    'Good use of headings and formatting'
-                ],
-                recommendations: [
-                    'Add meta descriptions and tags',
-                    'Include internal and external links',
-                    'Optimize for target keywords'
-                ],
-                optimization: `📝 ${this.generateBlogOptimization(content)}`,
-                hashtags: ['SEO', 'ContentStrategy', 'DigitalMarketing'],
-                engagement: [
-                    'Add social sharing options',
-                    'Include author information',
-                    'Add related content suggestions'
-                ]
-            },
-            email: {
-                insights: [
-                    'Content is clear and professional',
-                    'Good email formatting',
-                    'Could benefit from personalization'
-                ],
-                recommendations: [
-                    'Add personalized greetings',
-                    'Include clear call-to-action',
-                    'Use email-friendly formatting'
-                ],
-                optimization: `📧 ${this.generateEmailOptimization(content)}`,
-                hashtags: ['EmailMarketing', 'Professional', 'Communication'],
-                engagement: [
-                    'Add personal signature',
-                    'Include contact details',
-                    'Add unsubscribe option'
-                ]
-            }
+    private buildPrompt(request: AIAnalysisRequest): string {
+        const platformInstructions = {
+            linkedin: 'Optimize for LinkedIn: professional tone, industry insights, networking opportunities',
+            twitter: 'Optimize for X/Twitter: concise, engaging, trending topics, viral potential',
+            blog: 'Optimize for blog/website: SEO-friendly, comprehensive, authoritative',
+            email: 'Optimize for email newsletter: personal, actionable, relationship-building'
         }
 
-        return platformSpecific[platform] || platformSpecific.linkedin
+        const toneInstructions = {
+            professional: 'Use a professional, business-like tone with industry terminology and formal language',
+            casual: 'Use a relaxed, conversational tone that feels friendly and approachable',
+            funny: 'Add humor and wit while maintaining the core message and being entertaining',
+            harsh: 'Be direct, blunt, and brutally honest without sugar-coating',
+            friendly: 'Use a warm, supportive, and encouraging tone that builds positive connections',
+            formal: 'Use academic, structured language with proper citations and formal writing conventions'
+        }
+
+        const toneInstruction = request.tone ? `\nTONE: ${request.tone.toUpperCase()}\nTONE INSTRUCTIONS: ${toneInstructions[request.tone]}` : ''
+
+        return `Analyze this content for ${request.platform} optimization:
+
+CONTENT:
+${request.content}
+
+PLATFORM: ${request.platform}
+INSTRUCTIONS: ${platformInstructions[request.platform]}${toneInstruction}
+
+Please provide a JSON response with the following structure:
+{
+  "score": 85,
+  "insights": ["insight 1", "insight 2", "insight 3"],
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
+  "optimization": "Optimized version of the content for the platform with the specified tone",
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
+  "engagement": ["engagement tip 1", "engagement tip 2"]
+}
+
+Focus on:
+- Platform-specific best practices
+- Content structure and readability
+- Engagement and interaction potential
+- SEO and discoverability
+- Professional credibility and authority
+- Maintaining the specified tone throughout the optimized content`
     }
 
-    private generateLinkedInOptimization(content: string): string {
-        return `LinkedIn Post Optimization:
-    
-📊 EXECUTIVE SUMMARY:
-${content.substring(0, 100)}...
+    private parseResponse(response: string): AIAnalysisResponse['analysis'] {
+        try {
+            // Try to extract JSON from the response
+            const jsonMatch = response.match(/\{[\s\S]*\}/)
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0])
+                return {
+                    score: parsed.score || 0,
+                    insights: parsed.insights || [],
+                    recommendations: parsed.recommendations || [],
+                    optimization: parsed.optimization || '',
+                    hashtags: parsed.hashtags || [],
+                    engagement: parsed.engagement || [],
+                }
+            }
+        } catch (error) {
+            this.logger.warn('Failed to parse Anthropic response as JSON:', error.message)
+        }
 
-💼 PROFESSIONAL IMPACT:
-This content demonstrates industry expertise and thought leadership.
-
-🔮 STRATEGIC IMPLICATIONS:
-Consider the broader industry implications and trends.
-
-💭 ENGAGEMENT QUESTIONS:
-What's your professional experience with this topic?
-
-#ProfessionalGrowth #IndustryLeadership #CareerAdvancement`
-    }
-
-    private generateTwitterOptimization(content: string): string {
-        return `Twitter Thread Optimization:
-    
-🔥 Key Insight: ${content.substring(0, 50)}...
-
-💡 Professional Perspective: This content offers valuable industry insights.
-
-❓ Thought Question: What do you think about this development?
-
-#Trending #ThoughtLeadership #Engagement`
-    }
-
-    private generateBlogOptimization(content: string): string {
-        return `Blog Post Optimization:
-    
-📝 Introduction: ${content.substring(0, 100)}...
-
-🔍 Key Insights:
-• Strategic point 1
-• Strategic point 2
-• Strategic point 3
-
-📚 Conclusion: This content provides valuable strategic insights.
-
-#SEO #ContentStrategy #DigitalMarketing`
-    }
-
-    private generateEmailOptimization(content: string): string {
-        return `Email Newsletter Optimization:
-    
-📧 Subject: Professional Update & Insights
-    
-Dear [Name],
-
-${content.substring(0, 100)}...
-
-Best regards,
-[Your Name]
-
-#EmailMarketing #Professional #Communication`
+        // Fallback parsing if JSON fails
+        return {
+            score: 75,
+            insights: ['Content analyzed successfully'],
+            recommendations: ['Consider the AI-generated insights above'],
+            optimization: response,
+            hashtags: ['AI', 'Optimization'],
+            engagement: ['Use the optimized content above'],
+        }
     }
 }

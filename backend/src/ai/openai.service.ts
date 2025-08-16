@@ -16,7 +16,7 @@ export class OpenAIService implements AIProvider {
       this.logger.warn('OpenAI API key not found. Service will be disabled.')
       return
     }
-    
+
     this.openai = new OpenAI({
       apiKey,
       maxRetries: 3,
@@ -39,7 +39,7 @@ export class OpenAIService implements AIProvider {
   async isHealthy(): Promise<boolean> {
     try {
       if (!this.openai) return false
-      
+
       // Simple health check with minimal tokens
       await this.openai.chat.completions.create({
         model: this.model,
@@ -55,14 +55,14 @@ export class OpenAIService implements AIProvider {
 
   async analyze(request: AIAnalysisRequest): Promise<AIAnalysisResponse> {
     const startTime = Date.now()
-    
+
     try {
       if (!this.openai) {
         throw new Error('OpenAI service not configured')
       }
 
       const prompt = this.buildPrompt(request)
-      
+
       const completion = await this.openai.chat.completions.create({
         model: this.model,
         messages: [
@@ -132,20 +132,31 @@ export class OpenAIService implements AIProvider {
       email: 'Optimize for email newsletter: personal, actionable, relationship-building'
     }
 
+    const toneInstructions = {
+      professional: 'Use a professional, business-like tone with industry terminology and formal language',
+      casual: 'Use a relaxed, conversational tone that feels friendly and approachable',
+      funny: 'Add humor and wit while maintaining the core message and being entertaining',
+      harsh: 'Be direct, blunt, and brutally honest without sugar-coating',
+      friendly: 'Use a warm, supportive, and encouraging tone that builds positive connections',
+      formal: 'Use academic, structured language with proper citations and formal writing conventions'
+    }
+
+    const toneInstruction = request.tone ? `\nTONE: ${request.tone.toUpperCase()}\nTONE INSTRUCTIONS: ${toneInstructions[request.tone]}` : ''
+
     return `Analyze this content for ${request.platform} optimization:
 
 CONTENT:
 ${request.content}
 
 PLATFORM: ${request.platform}
-INSTRUCTIONS: ${platformInstructions[request.platform]}
+INSTRUCTIONS: ${platformInstructions[request.platform]}${toneInstruction}
 
 Please provide a JSON response with the following structure:
 {
   "score": 85,
   "insights": ["insight 1", "insight 2", "insight 3"],
   "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
-  "optimization": "Optimized version of the content for the platform",
+  "optimization": "Optimized version of the content for the platform with the specified tone",
   "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
   "engagement": ["engagement tip 1", "engagement tip 2"]
 }
@@ -155,7 +166,8 @@ Focus on:
 - Content structure and readability
 - Engagement and interaction potential
 - SEO and discoverability
-- Professional credibility and authority`
+- Professional credibility and authority
+- Maintaining the specified tone throughout the optimized content`
   }
 
   private parseResponse(response: string): AIAnalysisResponse['analysis'] {

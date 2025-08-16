@@ -66,24 +66,36 @@ export class MistralService implements AIProvider {
         try {
             this.logger.log(`Starting Mistral analysis for ${request.platform} platform`)
 
-            // For now, return a mock response since we need to install mistral-ts
-            // TODO: Implement actual Mistral API calls
-            const mockResponse = await this.generateMockResponse(request)
+            // Build the prompt for Mistral
+            const prompt = this.buildPrompt(request)
 
+            // Make real API call to Mistral
+            const response = await this.client.chat({
+                model: 'mistral-large-latest',
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                maxTokens: request.maxTokens || 4000,
+                temperature: request.temperature || 0.7
+            })
+
+            const aiResponse = response.choices[0]?.message?.content
+            if (!aiResponse) {
+                throw new Error('No response from Mistral')
+            }
+
+            // Parse the AI response
+            const analysis = this.parseResponse(aiResponse)
             const responseTime = Date.now() - startTime
             const estimatedTokens = Math.ceil(request.content.length / 4) + 500
 
             return {
                 provider: 'Mistral',
                 model: 'mistral-large-latest',
-                analysis: {
-                    score: Math.floor(Math.random() * 20) + 80, // 80-100
-                    insights: mockResponse.insights,
-                    recommendations: mockResponse.recommendations,
-                    optimization: mockResponse.optimization,
-                    hashtags: mockResponse.hashtags,
-                    engagement: mockResponse.engagement
-                },
+                analysis,
                 metadata: {
                     tokensUsed: estimatedTokens,
                     cost: estimatedTokens * 0.00014, // Mistral pricing
@@ -106,154 +118,79 @@ export class MistralService implements AIProvider {
         return 32000 // Mistral model context window
     }
 
-    private async generateMockResponse(request: AIAnalysisRequest): Promise<{
-        insights: string[]
-        recommendations: string[]
-        optimization: string
-        hashtags: string[]
-        engagement: string[]
-    }> {
-        const { content, platform } = request
-
-        const platformSpecific = {
-            linkedin: {
-                insights: [
-                    'Content demonstrates professional expertise',
-                    'Good use of industry-specific terminology',
-                    'Could benefit from more concrete examples'
-                ],
-                recommendations: [
-                    'Add 2-3 specific data points',
-                    'Include a call-to-action question',
-                    'Use more LinkedIn-specific formatting'
-                ],
-                optimization: `🚀 ${this.generateLinkedInOptimization(content)}`,
-                hashtags: ['ProfessionalDevelopment', 'IndustryInsights', 'CareerGrowth'],
-                engagement: [
-                    'Ask for audience experiences',
-                    'Encourage professional discussion',
-                    'Share personal insights'
-                ]
-            },
-            twitter: {
-                insights: [
-                    'Content is concise and engaging',
-                    'Good use of conversational tone',
-                    'Could benefit from trending hashtags'
-                ],
-                recommendations: [
-                    'Add 1-2 trending hashtags',
-                    'Include a question for engagement',
-                    'Keep under 280 characters'
-                ],
-                optimization: `🔥 ${this.generateTwitterOptimization(content)}`,
-                hashtags: ['Trending', 'Engagement', 'Discussion'],
-                engagement: [
-                    'Ask a question',
-                    'Encourage retweets',
-                    'Tag relevant accounts'
-                ]
-            },
-            blog: {
-                insights: [
-                    'Content has good structure',
-                    'Could benefit from more SEO optimization',
-                    'Good use of headings and subheadings'
-                ],
-                recommendations: [
-                    'Add meta description',
-                    'Include internal links',
-                    'Optimize for target keywords'
-                ],
-                optimization: `📝 ${this.generateBlogOptimization(content)}`,
-                hashtags: ['SEO', 'ContentMarketing', 'DigitalMarketing'],
-                engagement: [
-                    'Add social sharing buttons',
-                    'Include author bio',
-                    'Add related posts section'
-                ]
-            },
-            email: {
-                insights: [
-                    'Content is professional and clear',
-                    'Good use of email formatting',
-                    'Could benefit from personalization'
-                ],
-                recommendations: [
-                    'Add personal greeting',
-                    'Include clear call-to-action',
-                    'Use email-friendly formatting'
-                ],
-                optimization: `📧 ${this.generateEmailOptimization(content)}`,
-                hashtags: ['EmailMarketing', 'Professional', 'Communication'],
-                engagement: [
-                    'Add personal signature',
-                    'Include contact information',
-                    'Add unsubscribe option'
-                ]
-            }
+    private buildPrompt(request: AIAnalysisRequest): string {
+        const platformInstructions = {
+            linkedin: 'Optimize for LinkedIn: professional tone, industry insights, networking opportunities',
+            twitter: 'Optimize for X/Twitter: concise, engaging, trending topics, viral potential',
+            blog: 'Optimize for blog/website: SEO-friendly, comprehensive, authoritative',
+            email: 'Optimize for email newsletter: personal, actionable, relationship-building'
         }
 
-        return platformSpecific[platform] || platformSpecific.linkedin
+        const toneInstructions = {
+            professional: 'Use a professional, business-like tone with industry terminology and formal language',
+            casual: 'Use a relaxed, conversational tone that feels friendly and approachable',
+            funny: 'Add humor and wit while maintaining the core message and being entertaining',
+            harsh: 'Be direct, blunt, and brutally honest without sugar-coating',
+            friendly: 'Use a warm, supportive, and encouraging tone that builds positive connections',
+            formal: 'Use academic, structured language with proper citations and formal writing conventions'
+        }
+
+        const toneInstruction = request.tone ? `\nTONE: ${request.tone.toUpperCase()}\nTONE INSTRUCTIONS: ${toneInstructions[request.tone]}` : ''
+
+        return `Analyze this content for ${request.platform} optimization:
+
+CONTENT:
+${request.content}
+
+PLATFORM: ${request.platform}
+INSTRUCTIONS: ${platformInstructions[request.platform]}${toneInstruction}
+
+Please provide a JSON response with the following structure:
+{
+  "score": 85,
+  "insights": ["insight 1", "insight 2", "insight 3"],
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
+  "optimization": "Optimized version of the content for the platform with the specified tone",
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
+  "engagement": ["engagement tip 1", "engagement tip 2"]
+}
+
+Focus on:
+- Platform-specific best practices
+- Content structure and readability
+- Engagement and interaction potential
+- SEO and discoverability
+- Professional credibility and authority
+- Maintaining the specified tone throughout the optimized content`
     }
 
-    private generateLinkedInOptimization(content: string): string {
-        return `LinkedIn Post Optimization:
-    
-📊 EXECUTIVE SUMMARY:
-${content.substring(0, 100)}...
+    private parseResponse(response: string): AIAnalysisResponse['analysis'] {
+        try {
+            // Try to extract JSON from the response
+            const jsonMatch = response.match(/\{[\s\S]*\}/)
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0])
+                return {
+                    score: parsed.score || 0,
+                    insights: parsed.insights || [],
+                    recommendations: parsed.recommendations || [],
+                    optimization: parsed.optimization || '',
+                    hashtags: parsed.hashtags || [],
+                    engagement: parsed.engagement || [],
+                }
+            }
+        } catch (error) {
+            this.logger.warn('Failed to parse Mistral response as JSON:', error.message)
+        }
 
-💼 PROFESSIONAL IMPACT:
-This content demonstrates expertise and industry knowledge.
-
-🔮 STRATEGIC IMPLICATIONS:
-Consider how this relates to current industry trends.
-
-💭 ENGAGEMENT QUESTIONS:
-What's your experience with this topic?
-
-#ProfessionalDevelopment #IndustryInsights #CareerGrowth`
-    }
-
-    private generateTwitterOptimization(content: string): string {
-        return `Twitter Thread Optimization:
-    
-🔥 Key Point: ${content.substring(0, 50)}...
-
-💡 Insight: This content provides valuable perspective.
-
-❓ Question: What do you think about this?
-
-#Trending #Engagement #Discussion`
-    }
-
-    private generateBlogOptimization(content: string): string {
-        return `Blog Post Optimization:
-    
-📝 Introduction: ${content.substring(0, 100)}...
-
-🔍 Key Takeaways:
-• Point 1
-• Point 2
-• Point 3
-
-📚 Conclusion: This content offers valuable insights.
-
-#SEO #ContentMarketing #DigitalMarketing`
-    }
-
-    private generateEmailOptimization(content: string): string {
-        return `Email Newsletter Optimization:
-    
-📧 Subject: Professional Update
-    
-Dear [Name],
-
-${content.substring(0, 100)}...
-
-Best regards,
-[Your Name]
-
-#EmailMarketing #Professional #Communication`
+        // Fallback parsing if JSON fails
+        return {
+            score: 75,
+            insights: ['Content analyzed successfully'],
+            recommendations: ['Consider the AI-generated insights above'],
+            optimization: response,
+            hashtags: ['AI', 'Optimization'],
+            engagement: ['Use the optimized content above'],
+        }
     }
 }
