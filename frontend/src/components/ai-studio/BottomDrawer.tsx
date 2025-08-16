@@ -11,6 +11,7 @@ interface BottomDrawerProps {
     optimizationResult?: any
     tool?: any
     analysisData?: any
+    originalContent?: string
 }
 
 export default function BottomDrawer({
@@ -20,7 +21,8 @@ export default function BottomDrawer({
     contentType,
     optimizationResult,
     tool,
-    analysisData
+    analysisData,
+    originalContent: passedOriginalContent
 }: BottomDrawerProps) {
     useEffect(() => {
         const onEsc = (e: KeyboardEvent) => {
@@ -101,20 +103,35 @@ export default function BottomDrawer({
 
     const getOriginalContent = () => {
         if (contentType === 'tool') {
-            return tool?.description || tool?.tagline || 'No tool description available'
+            return passedOriginalContent || tool?.description || tool?.tagline || 'No tool description available'
         }
         // For content optimization, get from the original input
         if (contentType === 'content') {
-            return optimizationResult?.originalContent || 'No original content available'
+            return passedOriginalContent ||
+                optimizationResult?.originalContent ||
+                optimizationResult?.original?.content ||
+                optimizationResult?.input ||
+                'No original content available'
         }
         if (contentType === 'url') {
-            return optimizationResult?.originalContent || 'No original content available'
+            return passedOriginalContent ||
+                optimizationResult?.originalContent ||
+                optimizationResult?.original?.content ||
+                optimizationResult?.input ||
+                'No original content available'
         }
         return 'No original content available'
     }
 
     const content = getOptimizedContent()
     const originalContent = getOriginalContent()
+
+    // Debug logging to see what's available
+    console.log('Content Type:', contentType)
+    console.log('Optimization Result:', optimizationResult)
+    console.log('Tool:', tool)
+    console.log('Original Content:', originalContent)
+    console.log('Optimized Content:', content)
 
     // Get scores from analysis data
     const originalScore = analysisData?.score || 0
@@ -195,17 +212,29 @@ export default function BottomDrawer({
                         </SheetTitle>
                     </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{ scrollbarWidth: 'thin' }}>
 
                         {/* Score Section */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-muted/30 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-muted-foreground">{originalScore}/100</div>
-                                <div className="text-sm text-muted-foreground">Original Score</div>
+                            <div className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4 text-center border border-slate-200 dark:border-slate-600">
+                                <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{originalScore}/100</div>
+                                <div className="text-sm text-slate-600 dark:text-slate-400">Original Score</div>
+                                <div className="w-full bg-slate-300 dark:bg-slate-600 rounded-full h-2 mt-2">
+                                    <div
+                                        className="bg-slate-600 dark:bg-slate-400 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${originalScore}%` }}
+                                    />
+                                </div>
                             </div>
-                            <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-4 text-center border border-green-200 dark:border-green-800">
-                                <div className="text-2xl font-bold text-green-600">{potentialScore}/100</div>
-                                <div className="text-sm text-green-600">Potential Score</div>
+                            <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 rounded-lg p-4 text-center border border-green-200 dark:border-green-700">
+                                <div className="text-2xl font-bold text-green-700 dark:text-green-300">{potentialScore}/100</div>
+                                <div className="text-sm text-green-600 dark:text-green-400">Potential Score</div>
+                                <div className="w-full bg-green-300 dark:bg-green-600 rounded-full h-2 mt-2">
+                                    <div
+                                        className="bg-green-600 dark:bg-green-400 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${potentialScore}%` }}
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -218,14 +247,14 @@ export default function BottomDrawer({
                                 </h3>
                                 <div className="space-y-2">
                                     {improvements.slice(0, 5).map((improvement: any, index: number) => (
-                                        <div key={index} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                                        <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/50 dark:hover:to-blue-800/50 transition-all duration-200">
                                             <div className="flex items-center gap-2">
-                                                <Target className="h-4 w-4 text-blue-500" />
+                                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                                 <span className="text-sm font-medium">{improvement.area}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs text-muted-foreground">{improvement.suggestions?.[0] || 'Improve this area'}</span>
-                                                <span className="text-sm font-bold text-green-600">+{improvement.priority} pts</span>
+                                                <span className="text-xs text-muted-foreground max-w-32 truncate">{improvement.suggestions?.[0] || 'Improve this area'}</span>
+                                                <span className="text-sm font-bold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-full">+{improvement.priority} pts</span>
                                             </div>
                                         </div>
                                     ))}
@@ -243,11 +272,12 @@ export default function BottomDrawer({
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {/* Original Content */}
                                 <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-muted-foreground">Original Content</h4>
-                                    <div className="bg-muted/30 rounded-lg p-3 border max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                                        <pre className="whitespace-pre-wrap text-sm text-foreground">
-                                            {originalContent}
-                                        </pre>
+                                    <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                        Original Content
+                                    </h4>
+                                    <div className="w-full h-40 bg-muted/30 rounded-lg p-3 border overflow-y-auto">
+                                        <pre className="whitespace-pre-wrap text-sm text-foreground m-0">{originalContent}</pre>
                                     </div>
                                     <div className="flex justify-end">
                                         <button
@@ -262,13 +292,35 @@ export default function BottomDrawer({
 
                                 {/* Optimized Content */}
                                 <div className="space-y-2">
-                                    <h4 className="text-sm font-medium text-muted-foreground">Optimized Content</h4>
-                                    <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 border border-green-200 dark:border-green-800 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-green-300 dark:scrollbar-thumb-green-600 scrollbar-track-transparent">
-                                        <pre className="whitespace-pre-wrap text-sm text-foreground">
-                                            {content}
-                                        </pre>
+                                    <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        Optimized Content
+                                    </h4>
+                                    <div className="w-full h-40 bg-green-50 dark:bg-green-950/30 rounded-lg p-3 border border-green-200 dark:border-green-800 overflow-y-auto">
+                                        <pre className="whitespace-pre-wrap text-sm text-foreground m-0">{content}</pre>
                                     </div>
-                                    <div className="flex justify-end">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex gap-2 text-xs text-muted-foreground">
+                                            {[
+                                                { label: 'Professional', tone: 'professional' },
+                                                { label: 'Casual', tone: 'casual' },
+                                                { label: 'Funny', tone: 'funny' },
+                                                { label: 'Harsh', tone: 'harsh' },
+                                                { label: 'Friendly', tone: 'friendly' },
+                                                { label: 'Formal', tone: 'formal' }
+                                            ].map(({ label, tone }) => (
+                                                <button
+                                                    key={tone}
+                                                    className="hover:text-foreground transition-colors cursor-pointer"
+                                                    onClick={() => {
+                                                        // TODO: Implement tone variation functionality
+                                                        console.log(`Generate ${tone} tone variation`)
+                                                    }}
+                                                >
+                                                    {label}
+                                                </button>
+                                            ))}
+                                        </div>
                                         <button
                                             onClick={() => copyToClipboard(content)}
                                             className="p-2 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors"
@@ -278,26 +330,59 @@ export default function BottomDrawer({
                                         </button>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-wrap gap-2 pt-4 border-t">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    const blob = new Blob([content], { type: 'text/plain' })
-                                    const url = URL.createObjectURL(blob)
-                                    const a = document.createElement('a')
-                                    a.href = url
-                                    a.download = `${platform}-optimized-content.txt`
-                                    a.click()
-                                    URL.revokeObjectURL(url)
-                                }}
-                            >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                            </Button>
+                                {/* Content Stats and Action Buttons Stacked */}
+                                <div className="space-y-4 pt-4 border-t">
+                                    {/* Content Stats */}
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="text-center p-3 bg-muted/30 rounded-lg">
+                                            <div className="text-lg font-bold text-blue-600">{content.split(' ').length}</div>
+                                            <div className="text-xs text-muted-foreground">Words</div>
+                                        </div>
+                                        <div className="text-center p-3 bg-muted/30 rounded-lg">
+                                            <div className="text-lg font-bold text-purple-600">{content.length}</div>
+                                            <div className="text-xs text-muted-foreground">Characters</div>
+                                        </div>
+                                        <div className="text-center p-3 bg-muted/30 rounded-lg">
+                                            <div className="text-lg font-bold text-green-600">{Math.ceil(content.split(' ').length / 200 * 100)}%</div>
+                                            <div className="text-xs text-muted-foreground">Readability</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex flex-col gap-2">
+                                        <Button
+                                            variant="outline"
+                                            className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                            onClick={() => {
+                                                // TODO: Implement redo functionality
+                                                console.log('Redo optimization requested')
+                                            }}
+                                        >
+                                            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            Redo Optimization
+                                        </Button>
+                                        <Button
+                                            variant="default"
+                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                            onClick={() => {
+                                                const blob = new Blob([content], { type: 'text/plain' })
+                                                const url = URL.createObjectURL(blob)
+                                                const a = document.createElement('a')
+                                                a.href = url
+                                                a.download = `${platform}-optimized-content.txt`
+                                                a.click()
+                                                URL.revokeObjectURL(url)
+                                            }}
+                                        >
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Download Optimized Content as TXT
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </SheetContent>
