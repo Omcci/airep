@@ -118,7 +118,8 @@ export class AIService implements OnModuleInit {
           {
             content: sanitizedContent,
             platform,
-            contentType
+            contentType,
+            tone: request.tone
           }
         )
 
