@@ -28,7 +28,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     }).then(res => res.json()),
-  optimizeContent: (data: { content: string; platform: string }) =>
+  optimizeContent: (data: { content: string; platform: string; tone?: string }) =>
     fetch('/api/audit/optimize', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -46,6 +46,28 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     }).then(res => res.json()),
+
+  // Tone variation generation
+  generateToneVariation: async (data: { content: string; platform: string; tone: string }) => {
+    const response = await fetch('/api/audit/tone-variation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    if (!response.ok) throw new Error('Failed to generate tone variation')
+    return response.json()
+  },
+
+  // Redo optimization
+  redoOptimization: async (data: { content: string; platform: string; tone?: string }) => {
+    const response = await fetch('/api/audit/redo-optimization', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    })
+    if (!response.ok) throw new Error('Failed to redo optimization')
+    return response.json()
+  }
 }
 
 export { fetchJSON }
