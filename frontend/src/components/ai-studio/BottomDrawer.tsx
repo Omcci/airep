@@ -1,7 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Copy, Download, TrendingUp, Target, CheckCircle, ChevronUp } from 'lucide-react'
+import { Copy, Download, TrendingUp, Target, CheckCircle, ChevronUp, Palette } from 'lucide-react'
+import { api } from '@/lib/api'
+import { TONE_OPTIONS, type ToneValue } from '@/lib/constants'
 
 interface BottomDrawerProps {
     isOpen: boolean
@@ -24,6 +26,9 @@ export default function BottomDrawer({
     analysisData,
     originalContent: passedOriginalContent
 }: BottomDrawerProps) {
+    const [currentContent, setCurrentContent] = useState(optimizationResult?.optimized?.content || '')
+    const [isGenerating, setIsGenerating] = useState(false)
+
     useEffect(() => {
         const onEsc = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen) onToggle()
@@ -92,6 +97,74 @@ export default function BottomDrawer({
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text)
         // Could add a toast notification here
+    }
+
+    // Utility function to render tone buttons
+    const renderToneButtons = () => (
+        TONE_OPTIONS.map(({ label, tone }) => (
+            <button
+                key={tone}
+                className="hover:text-foreground transition-colors cursor-pointer"
+                onClick={() => handleToneVariation(tone)}
+            >
+                {label}
+            </button>
+        ))
+    )
+
+    const handleToneVariation = async (tone: ToneValue) => {
+        if (!passedOriginalContent) return
+
+        setIsGenerating(true)
+        try {
+            const result = await api.generateToneVariation({
+                content: passedOriginalContent,
+                platform,
+                tone
+            })
+
+            if (result.optimized?.content) {
+                setCurrentContent(result.optimized.content)
+                // Update the optimization result to reflect the new tone
+                if (optimizationResult) {
+                    optimizationResult.optimized.content = result.optimized.content
+                    optimizationResult.optimized.tone = tone
+                }
+            }
+        } catch (error) {
+            console.error('Failed to generate tone variation:', error)
+            // Could add error notification here
+        } finally {
+            setIsGenerating(false)
+        }
+    }
+
+    const handleRedoOptimization = async () => {
+        if (!passedOriginalContent) return
+
+        setIsGenerating(true)
+        try {
+            const result = await api.redoOptimization({
+                content: passedOriginalContent,
+                platform,
+                tone: optimizationResult?.optimized?.tone || 'professional'
+            })
+
+            if (result.optimized?.content) {
+                setCurrentContent(result.optimized.content)
+                // Update the optimization result
+                if (optimizationResult) {
+                    optimizationResult.optimized.content = result.optimized.content
+                    optimizationResult.original = result.original
+                    optimizationResult.improvements = result.optimized.improvements
+                }
+            }
+        } catch (error) {
+            console.error('Failed to redo optimization:', error)
+            // Could add error notification here
+        } finally {
+            setIsGenerating(false)
+        }
     }
 
     const getOptimizedContent = () => {
@@ -216,7 +289,7 @@ export default function BottomDrawer({
 
                         {/* Score Section */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4 text-center border border-slate-200 dark:border-slate-600">
+                            <div className="border border-slate-200 dark:border-slate-600 rounded-lg p-4 text-center">
                                 <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{originalScore}/100</div>
                                 <div className="text-sm text-slate-600 dark:text-slate-400">Original Score</div>
                                 <div className="w-full bg-slate-300 dark:bg-slate-600 rounded-full h-2 mt-2">
@@ -226,7 +299,7 @@ export default function BottomDrawer({
                                     />
                                 </div>
                             </div>
-                            <div className="bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 rounded-lg p-4 text-center border border-green-200 dark:border-green-700">
+                            <div className="border border-green-200 dark:border-green-700 rounded-lg p-4 text-center">
                                 <div className="text-2xl font-bold text-green-700 dark:text-green-300">{potentialScore}/100</div>
                                 <div className="text-sm text-green-600 dark:text-green-400">Potential Score</div>
                                 <div className="w-full bg-green-300 dark:bg-green-600 rounded-full h-2 mt-2">
@@ -247,7 +320,7 @@ export default function BottomDrawer({
                                 </h3>
                                 <div className="space-y-2">
                                     {improvements.slice(0, 5).map((improvement: any, index: number) => (
-                                        <div key={index} className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/30 dark:to-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800 hover:from-blue-100 hover:to-blue-200 dark:hover:from-blue-900/50 dark:hover:to-blue-800/50 transition-all duration-200">
+                                        <div key={index} className="flex items-center justify-between p-3 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-200">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                                 <span className="text-sm font-medium">{improvement.area}</span>
@@ -296,31 +369,10 @@ export default function BottomDrawer({
                                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                         Optimized Content
                                     </h4>
-                                    <div className="w-full h-40 bg-green-50 dark:bg-green-950/30 rounded-lg p-3 border border-green-200 dark:border-green-800 overflow-y-auto">
-                                        <pre className="whitespace-pre-wrap text-sm text-foreground m-0">{content}</pre>
+                                    <div className="w-full h-40 bg-muted/30 rounded-lg p-3 border overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                                        <pre className="whitespace-pre-wrap text-sm text-foreground m-0">{currentContent}</pre>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex gap-2 text-xs text-muted-foreground">
-                                            {[
-                                                { label: 'Professional', tone: 'professional' },
-                                                { label: 'Casual', tone: 'casual' },
-                                                { label: 'Funny', tone: 'funny' },
-                                                { label: 'Harsh', tone: 'harsh' },
-                                                { label: 'Friendly', tone: 'friendly' },
-                                                { label: 'Formal', tone: 'formal' }
-                                            ].map(({ label, tone }) => (
-                                                <button
-                                                    key={tone}
-                                                    className="hover:text-foreground transition-colors cursor-pointer"
-                                                    onClick={() => {
-                                                        // TODO: Implement tone variation functionality
-                                                        console.log(`Generate ${tone} tone variation`)
-                                                    }}
-                                                >
-                                                    {label}
-                                                </button>
-                                            ))}
-                                        </div>
+                                    <div className="flex items-center justify-end gap-1">
                                         <button
                                             onClick={() => copyToClipboard(content)}
                                             className="p-2 text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 transition-colors"
@@ -328,45 +380,21 @@ export default function BottomDrawer({
                                         >
                                             <Copy className="h-4 w-4" />
                                         </button>
-                                    </div>
-                                </div>
-
-                                {/* Content Stats and Action Buttons Stacked */}
-                                <div className="space-y-4 pt-4 border-t">
-                                    {/* Content Stats */}
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div className="text-center p-3 bg-muted/30 rounded-lg">
-                                            <div className="text-lg font-bold text-blue-600">{content.split(' ').length}</div>
-                                            <div className="text-xs text-muted-foreground">Words</div>
-                                        </div>
-                                        <div className="text-center p-3 bg-muted/30 rounded-lg">
-                                            <div className="text-lg font-bold text-purple-600">{content.length}</div>
-                                            <div className="text-xs text-muted-foreground">Characters</div>
-                                        </div>
-                                        <div className="text-center p-3 bg-muted/30 rounded-lg">
-                                            <div className="text-lg font-bold text-green-600">{Math.ceil(content.split(' ').length / 200 * 100)}%</div>
-                                            <div className="text-xs text-muted-foreground">Readability</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Buttons */}
-                                    <div className="flex flex-col gap-2">
-                                        <Button
-                                            variant="outline"
-                                            className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30"
-                                            onClick={() => {
-                                                // TODO: Implement redo functionality
-                                                console.log('Redo optimization requested')
-                                            }}
+                                        <button
+                                            onClick={handleRedoOptimization}
+                                            className="p-2 text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                                            title="Redo optimization"
+                                            disabled={isGenerating}
                                         >
-                                            <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                            </svg>
-                                            Redo Optimization
-                                        </Button>
-                                        <Button
-                                            variant="default"
-                                            className="bg-green-600 hover:bg-green-700 text-white"
+                                            {isGenerating ? (
+                                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                            ) : (
+                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                </svg>
+                                            )}
+                                        </button>
+                                        <button
                                             onClick={() => {
                                                 const blob = new Blob([content], { type: 'text/plain' })
                                                 const url = URL.createObjectURL(blob)
@@ -376,11 +404,43 @@ export default function BottomDrawer({
                                                 a.click()
                                                 URL.revokeObjectURL(url)
                                             }}
+                                            className="p-2 text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
+                                            title="Download as TXT"
                                         >
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Download Optimized Content as TXT
-                                        </Button>
+                                            <Download className="h-4 w-4" />
+                                        </button>
                                     </div>
+                                    <div className="flex gap-2 text-xs text-muted-foreground">
+                                        {isGenerating ? (
+                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                                                <span>Generating...</span>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <span className="text-xs text-muted-foreground font-bold mr-2">Try different tones:</span>
+                                                {renderToneButtons()}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content Stats */}
+                        <div className="space-y-4 pt-4 border-t">
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="text-center p-3 bg-muted/30 rounded-lg">
+                                    <div className="text-lg font-bold text-blue-600">{content.split(' ').length}</div>
+                                    <div className="text-xs text-muted-foreground">Words</div>
+                                </div>
+                                <div className="text-center p-3 bg-muted/30 rounded-lg">
+                                    <div className="text-lg font-bold text-purple-600">{content.length}</div>
+                                    <div className="text-xs text-muted-foreground">Characters</div>
+                                </div>
+                                <div className="text-center p-3 bg-muted/30 rounded-lg">
+                                    <div className="text-lg font-bold text-green-600">{Math.ceil(content.split(' ').length / 200 * 100)}%</div>
+                                    <div className="text-xs text-muted-foreground">Readability</div>
                                 </div>
                             </div>
                         </div>
