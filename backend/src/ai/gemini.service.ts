@@ -115,6 +115,9 @@ export class GeminiService implements AIProvider {
     }> {
         const { content, platform, tone } = request
 
+        // Naive language detection: check for common French characters/words
+        const looksFrench = /[éèêëàâîïôùûçœáù]|\b(le|la|les|des|un|une|je|tu|il|elle|nous|vous|ils|elles|et|ou|mais|donc|car|avec|pour|sans)\b/i.test(content)
+
         const toneModifiers = {
             professional: {
                 prefix: '💼 Professional',
@@ -162,8 +165,12 @@ export class GeminiService implements AIProvider {
                     'Add industry benchmarks and comparisons',
                     'Use more professional storytelling techniques'
                 ],
-                optimization: `${toneModifier.prefix} LinkedIn Post\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #LinkedInTips`,
-                hashtags: [...toneModifier.hashtags, 'ProfessionalDevelopment', 'IndustryInsights', 'CareerGrowth'],
+                optimization: looksFrench
+                    ? `${toneModifier.prefix} Publication LinkedIn\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #ConseilsLinkedIn`
+                    : `${toneModifier.prefix} LinkedIn Post\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #LinkedInTips`,
+                hashtags: looksFrench
+                    ? [...toneModifier.hashtags, 'DéveloppementProfessionnel', 'InsightsIndustrie', 'ÉvolutionDeCarrière']
+                    : [...toneModifier.hashtags, 'ProfessionalDevelopment', 'IndustryInsights', 'CareerGrowth'],
                 engagement: [
                     'Share professional challenges and solutions',
                     'Ask for industry insights and experiences',
@@ -181,8 +188,12 @@ export class GeminiService implements AIProvider {
                     'Include a thought-provoking question',
                     'Keep it under 280 characters for optimal engagement'
                 ],
-                optimization: `${toneModifier.prefix} Tweet\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #TwitterTips`,
-                hashtags: [...toneModifier.hashtags, 'Trending', 'ThoughtLeadership', 'Engagement'],
+                optimization: looksFrench
+                    ? `${toneModifier.prefix} Tweet\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #AstucesTwitter`
+                    : `${toneModifier.prefix} Tweet\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #TwitterTips`,
+                hashtags: looksFrench
+                    ? [...toneModifier.hashtags, 'Tendance', 'LeadershipDePensée', 'Engagement']
+                    : [...toneModifier.hashtags, 'Trending', 'ThoughtLeadership', 'Engagement'],
                 engagement: [
                     'Ask for opinions and experiences',
                     'Encourage discussion and sharing',
@@ -200,8 +211,12 @@ export class GeminiService implements AIProvider {
                     'Include internal and external links',
                     'Optimize for target keywords'
                 ],
-                optimization: `<h1>${toneModifier.prefix} Analysis</h1>\n\n<p>${content}</p>\n\n<p>This content has been optimized with a ${toneModifier.style} approach.</p>`,
-                hashtags: [...toneModifier.hashtags, 'SEO', 'ContentStrategy', 'DigitalMarketing'],
+                optimization: looksFrench
+                    ? `<h1>Analyse ${toneModifier.prefix}</h1>\n\n<p>${content}</p>\n\n<p>Ce contenu a été optimisé avec une approche ${toneModifier.style}.</p>`
+                    : `<h1>${toneModifier.prefix} Analysis</h1>\n\n<p>${content}</p>\n\n<p>This content has been optimized with a ${toneModifier.style} approach.</p>`,
+                hashtags: looksFrench
+                    ? [...toneModifier.hashtags, 'SEO', 'StratégieDeContenu', 'MarketingDigital']
+                    : [...toneModifier.hashtags, 'SEO', 'ContentStrategy', 'DigitalMarketing'],
                 engagement: [
                     'Add social sharing options',
                     'Include author information',
@@ -219,8 +234,12 @@ export class GeminiService implements AIProvider {
                     'Include clear call-to-action',
                     'Use email-friendly formatting'
                 ],
-                optimization: `Subject: ${toneModifier.prefix} Update\n\nHi Team,\n\n${content}\n\nBest regards,\n[Your Name]`,
-                hashtags: [...toneModifier.hashtags, 'EmailMarketing', 'Professional', 'Communication'],
+                optimization: looksFrench
+                    ? `Objet : Mise à jour ${toneModifier.prefix}\n\nBonjour l'équipe,\n\n${content}\n\nBien cordialement,\n[Votre Nom]`
+                    : `Subject: ${toneModifier.prefix} Update\n\nHi Team,\n\n${content}\n\nBest regards,\n[Your Name]`,
+                hashtags: looksFrench
+                    ? [...toneModifier.hashtags, 'EmailMarketing', 'Professionnel', 'Communication']
+                    : [...toneModifier.hashtags, 'EmailMarketing', 'Professional', 'Communication'],
                 engagement: [
                     'Add personal signature',
                     'Include contact details',

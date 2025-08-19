@@ -147,6 +147,8 @@ ${request.content}
 PLATFORM: ${request.platform}
 INSTRUCTIONS: ${platformInstructions[request.platform]}${toneInstruction}
 
+LANGUAGE POLICY: Detect the language of the CONTENT automatically and produce all generated text in that same language. Do not translate to another language. Keep the JSON property names in English.
+
 Please provide a JSON response with the following structure:
 {
   "score": 85,
