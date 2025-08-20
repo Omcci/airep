@@ -2,15 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import PlatformSelector from '../components/ai-studio/PlatformSelector'
 import ContentInput from '../components/ai-studio/ContentInput'
 import AnalysisResults from '../components/ai-studio/AnalysisResults'
 import BottomDrawer from '../components/ai-studio/BottomDrawer'
-import FloatingActionButton from '../components/ai-studio/FloatingActionButton'
 import ProgressIndicator from '../components/ai-studio/ProgressIndicator'
-import SuccessNotification from '../components/ai-studio/SuccessNotification'
 
 type WorkflowStep = 'analyze' | 'preview' | 'deploy'
 
@@ -20,8 +19,6 @@ export default function AISEOStudio() {
     const [platform, setPlatform] = useState<'linkedin' | 'twitter' | 'blog' | 'email'>('linkedin')
 
     // Success notification state
-    const [showSuccessNotification, setShowSuccessNotification] = useState(false)
-    const [successMessage, setSuccessMessage] = useState('')
     const [bottomDrawerOpen, setBottomDrawerOpen] = useState(false)
 
     // URL/Content analysis state
@@ -45,9 +42,6 @@ export default function AISEOStudio() {
     const auditMutation = useMutation({
         mutationFn: api.auditEvaluate,
         onSuccess: () => {
-            setSuccessMessage('Content analysis completed! Opening results...')
-            setShowSuccessNotification(true)
-            // Auto-advance to preview step after analysis
             setTimeout(() => setCurrentStep('preview'), 500)
         }
     })
@@ -55,9 +49,6 @@ export default function AISEOStudio() {
     const optimizeMutation = useMutation({
         mutationFn: api.optimizeContent,
         onSuccess: () => {
-            setSuccessMessage('Content optimization completed! Opening results...')
-            setShowSuccessNotification(true)
-            // Auto-advance to preview step after optimization
             setTimeout(() => setCurrentStep('preview'), 500)
         }
     })
@@ -65,9 +56,6 @@ export default function AISEOStudio() {
     const boostToolMutation = useMutation({
         mutationFn: api.boostTool,
         onSuccess: () => {
-            setSuccessMessage('Tool optimization completed! Opening results...')
-            setShowSuccessNotification(true)
-            // Auto-advance to preview step after tool optimization
             setTimeout(() => setCurrentStep('preview'), 500)
         }
     })
@@ -92,6 +80,11 @@ export default function AISEOStudio() {
             }, 100)
         }
     }, [currentStep])
+
+    const isWorking =
+        auditMutation.isPending ||
+        optimizeMutation.isPending ||
+        boostToolMutation.isPending
 
     const handleAnalyze = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -185,6 +178,23 @@ export default function AISEOStudio() {
                             analysisData={auditMutation.data}
                             isVisible={true}
                         />
+                        {/* Processing message appears after Analysis Results */}
+                        {isWorking && (
+                            <div className="mt-4 rounded-md border bg-muted/40 p-3">
+                                <div className="flex items-center gap-2 text-sm mb-4" role="status" aria-live="polite" aria-busy="true">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                    <span>Analyzing and preparing results… They will appear below.</span>
+                                </div>
+                                <div className="space-y-4">
+                                    <Skeleton className="h-4 w-1/4" />
+                                    <Skeleton className="h-20 w-full" />
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <Skeleton className="h-12 w-full" />
+                                        <Skeleton className="h-12 w-full" />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -194,43 +204,6 @@ export default function AISEOStudio() {
                     </div>
                 )}
             </div>
-
-            {/* Floating Action Button - Always visible next action */}
-            <FloatingActionButton
-                currentStep={currentStep}
-                onAction={() => {
-                    if (currentStep === 'analyze') {
-                        if (contentType === 'url' && url) {
-                            handleAnalyze({ preventDefault: () => { } } as any)
-                        } else if (contentType === 'content' && content) {
-                            handleAnalyze({ preventDefault: () => { } } as any)
-                        } else if (contentType === 'tool') {
-                            handleToolOptimize({ preventDefault: () => { } } as any)
-                        }
-                    } else if (currentStep === 'preview') {
-                        setBottomDrawerOpen(true)
-                    }
-                }}
-                isDisabled={
-                    (currentStep === 'analyze' && !content && !url && contentType !== 'tool') ||
-                    (currentStep === 'analyze' && contentType === 'tool' && !tool.name)
-                }
-                isLoading={
-                    auditMutation.isPending ||
-                    optimizeMutation.isPending ||
-                    boostToolMutation.isPending
-                }
-                contentType={contentType}
-            />
-
-            {/* Success Notifications */}
-            <SuccessNotification
-                message={successMessage}
-                isVisible={showSuccessNotification}
-                onClose={() => setShowSuccessNotification(false)}
-                autoHide={true}
-                autoHideDelay={3000}
-            />
 
             {/* Bottom Drawer for Results */}
             {(optimizeMutation.data || boostToolMutation.data) && (
