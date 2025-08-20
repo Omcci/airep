@@ -148,6 +148,7 @@ PLATFORM: ${request.platform}
 INSTRUCTIONS: ${platformInstructions[request.platform]}${toneInstruction}
 
 LANGUAGE POLICY: Detect the language of the CONTENT automatically and produce all generated text in that same language. Do not translate to another language. Keep the JSON property names in English.
+IMPORTANT: You MUST respond in the EXACT SAME LANGUAGE as the input content. If the content is in French, respond in French. If it's in Spanish, respond in Spanish. If it's in English, respond in English. NEVER translate the language.
 
 Please provide a JSON response with the following structure:
 {
@@ -165,7 +166,8 @@ Focus on:
 - Engagement and interaction potential
 - SEO and discoverability
 - Professional credibility and authority
-- Maintaining the specified tone throughout the optimized content`
+- Maintaining the specified tone throughout the optimized content
+- RESPONDING IN THE SAME LANGUAGE AS THE INPUT CONTENT`
     }
 
     private parseResponse(response: string): AIAnalysisResponse['analysis'] {
