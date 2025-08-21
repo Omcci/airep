@@ -73,7 +73,7 @@ export class AnthropicService implements AIProvider {
 
             // Make real API call to Anthropic Claude
             const response = await this.client.messages.create({
-                model: 'claude-3-5-sonnet-20241022',
+                model: 'claude-3-haiku-20240307',
                 max_tokens: request.maxTokens || 4000,
                 temperature: request.temperature || 0.7,
                 messages: [
@@ -96,11 +96,11 @@ export class AnthropicService implements AIProvider {
 
             return {
                 provider: 'Anthropic Claude',
-                model: 'claude-3-5-sonnet-20241022',
+                model: 'claude-3-haiku-20240307',
                 analysis,
                 metadata: {
                     tokensUsed: estimatedTokens,
-                    cost: estimatedTokens * 0.000003, // Anthropic pricing
+                    cost: estimatedTokens * 0.00000025, // Anthropic Haiku pricing (much cheaper!)
                     responseTime,
                     timestamp: new Date()
                 }
@@ -113,19 +113,19 @@ export class AnthropicService implements AIProvider {
     }
 
     getCostPerToken(): number {
-        return 0.000003 // Anthropic Claude 3.5 Sonnet pricing per token
+        return 0.00000025 // Anthropic Claude 3 Haiku pricing per token (much cheaper than Sonnet!)
     }
 
     getMaxTokens(): number {
-        return 200000 // Anthropic Claude 3.5 Sonnet context window
+        return 200000 // Anthropic Claude 3 Haiku context window (same as Sonnet, but cheaper!)
     }
 
     private buildPrompt(request: AIAnalysisRequest): string {
         const platformInstructions = {
-            linkedin: 'Optimize for LinkedIn: professional tone, industry insights, networking opportunities',
-            twitter: 'Optimize for X/Twitter: concise, engaging, trending topics, viral potential',
-            blog: 'Optimize for blog/website: SEO-friendly, comprehensive, authoritative',
-            email: 'Optimize for email newsletter: personal, actionable, relationship-building'
+            linkedin: 'OPTIMIZE FOR LINKEDIN ENGAGEMENT: Preserve storytelling hooks, personal anecdotes, and curiosity-building openings. Focus on human connection, vulnerability, and conversation-starting elements. LinkedIn rewards authentic storytelling over corporate polish. Maintain suspense and personal touch throughout.',
+            twitter: 'OPTIMIZE FOR X/TWITTER ENGAGEMENT: Use concise, punchy openings with thought-provoking questions. Focus on trending topics, viral potential, and retweetability. Keep it conversational and shareable.',
+            blog: 'OPTIMIZE FOR BLOG ENGAGEMENT: SEO-friendly headlines with clear value proposition. Structured, scannable content that keeps readers engaged. Focus on comprehensive coverage and authority.',
+            email: 'OPTIMIZE FOR EMAIL ENGAGEMENT: Personal, actionable content that builds relationships. Focus on opening hooks, clear value delivery, and strong calls-to-action.'
         }
 
         const toneInstructions = {
@@ -139,13 +139,19 @@ export class AnthropicService implements AIProvider {
 
         const toneInstruction = request.tone ? `\nTONE: ${request.tone.toUpperCase()}\nTONE INSTRUCTIONS: ${toneInstructions[request.tone]}` : ''
 
-        return `Analyze this content for ${request.platform} optimization:
+        return `Analyze this content for ${request.platform} optimization with a focus on ENGAGEMENT and PLATFORM-SPECIFIC PATTERNS:
 
 CONTENT:
 ${request.content}
 
 PLATFORM: ${request.platform}
 INSTRUCTIONS: ${platformInstructions[request.platform]}${toneInstruction}
+
+ENGAGEMENT FOCUS:
+- For LinkedIn: Preserve storytelling hooks, personal anecdotes, and curiosity-building openings. DO NOT remove suspense or give away the story upfront.
+- For Twitter: Create viral-worthy, shareable content with strong opening hooks.
+- For Blog: Maintain reader interest through structured storytelling and clear value delivery.
+- For Email: Build personal connection and drive action through compelling narratives.
 
 LANGUAGE POLICY: Detect the language of the CONTENT automatically and produce all generated text in that same language. Do not translate to another language. Keep the JSON property names in English.
 IMPORTANT: You MUST respond in the EXACT SAME LANGUAGE as the input content. If the content is in French, respond in French. If it's in Spanish, respond in Spanish. If it's in English, respond in English. NEVER translate the language.
@@ -155,18 +161,29 @@ Please provide a JSON response with the following structure:
   "score": 85,
   "insights": ["insight 1", "insight 2", "insight 3"],
   "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
-  "optimization": "Optimized version of the content for the platform with the specified tone",
+  "optimization": "Optimized version of the content for the platform with the specified tone. PRESERVE ENGAGEMENT HOOKS and storytelling elements.",
   "hashtags": ["hashtag1", "hashtag2", "hashtag3"],
-  "engagement": ["engagement tip 1", "engagement tip 2"]
+  "engagement": ["engagement tip 1", "engagement tip 2"],
+  "subScores": {
+    "structure": { "value": 1, "max": 2, "label": "Content Structure" },
+    "engagement": { "value": 2, "max": 3, "label": "Engagement & Interaction" },
+    "hashtags": { "value": 1, "max": 2, "label": "Hashtag Strategy" },
+    "specificity": { "value": 1, "max": 2, "label": "Data & Examples" },
+    "summary": { "value": 1, "max": 2, "label": "Executive Summary" },
+    "conversational": { "value": 2, "max": 2, "label": "Conversation Starter" },
+    "authority": { "value": 0, "max": 2, "label": "Professional Authority" },
+    "hookStrength": { "value": 2, "max": 2, "label": "Opening Hook Strength" },
+    "storytelling": { "value": 2, "max": 2, "label": "Storytelling Flow" },
+    "viralPotential": { "value": 1, "max": 2, "label": "Viral/Share Potential" }
+  }
 }
 
-Focus on:
-- Platform-specific best practices
-- Content structure and readability
-- Engagement and interaction potential
-- SEO and discoverability
-- Professional credibility and authority
-- Maintaining the specified tone throughout the optimized content
+CRITICAL ENGAGEMENT RULES:
+- NEVER remove compelling opening hooks that create curiosity
+- PRESERVE personal storytelling elements and vulnerability
+- MAINTAIN suspense and narrative flow
+- ENHANCE conversation-starting potential
+- OPTIMIZE for platform-specific engagement patterns
 - RESPONDING IN THE SAME LANGUAGE AS THE INPUT CONTENT`
     }
 
@@ -183,6 +200,7 @@ Focus on:
                     optimization: parsed.optimization || '',
                     hashtags: parsed.hashtags || [],
                     engagement: parsed.engagement || [],
+                    subScores: parsed.subScores || undefined,
                 }
             }
         } catch (error) {

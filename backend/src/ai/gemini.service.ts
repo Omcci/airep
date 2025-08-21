@@ -82,7 +82,19 @@ export class GeminiService implements AIProvider {
                     recommendations: mockResponse.recommendations,
                     optimization: mockResponse.optimization,
                     hashtags: mockResponse.hashtags,
-                    engagement: mockResponse.engagement
+                    engagement: mockResponse.engagement,
+                    subScores: {
+                        structure: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Content Structure" },
+                        engagement: { value: Math.floor(Math.random() * 3) + 1, max: 3, label: "Engagement & Interaction" },
+                        hashtags: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Hashtag Strategy" },
+                        specificity: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Data & Examples" },
+                        summary: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Executive Summary" },
+                        conversational: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Conversation Starter" },
+                        authority: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Professional Authority" },
+                        hookStrength: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Opening Hook Strength" },
+                        storytelling: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Storytelling Flow" },
+                        viralPotential: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Viral/Share Potential" }
+                    }
                 },
                 metadata: {
                     tokensUsed: estimatedTokens,
@@ -156,25 +168,25 @@ export class GeminiService implements AIProvider {
         const platformSpecific = {
             linkedin: {
                 insights: [
-                    'Content demonstrates strong professional expertise',
-                    'Good use of industry-specific terminology',
-                    'Could benefit from more concrete examples and data'
+                    'Content demonstrates strong storytelling hooks and personal vulnerability',
+                    'Good use of curiosity-building openings that create engagement',
+                    'Could benefit from more conversation-starting questions'
                 ],
                 recommendations: [
-                    'Include specific metrics and KPIs',
-                    'Add industry benchmarks and comparisons',
-                    'Use more professional storytelling techniques'
+                    'Preserve the compelling opening hook - it creates curiosity',
+                    'Add conversation-starting questions to encourage engagement',
+                    'Maintain personal storytelling elements throughout'
                 ],
                 optimization: looksFrench
-                    ? `${toneModifier.prefix} Publication LinkedIn\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #ConseilsLinkedIn`
-                    : `${toneModifier.prefix} LinkedIn Post\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #LinkedInTips`,
+                    ? `${toneModifier.prefix} Publication LinkedIn\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #ConseilsLinkedIn #Engagement`
+                    : `${toneModifier.prefix} LinkedIn Post\n\n${content}\n\n#${toneModifier.hashtags.join(' #')} #LinkedInTips #Engagement`,
                 hashtags: looksFrench
-                    ? [...toneModifier.hashtags, 'DéveloppementProfessionnel', 'InsightsIndustrie', 'ÉvolutionDeCarrière']
-                    : [...toneModifier.hashtags, 'ProfessionalDevelopment', 'IndustryInsights', 'CareerGrowth'],
+                    ? [...toneModifier.hashtags, 'DéveloppementProfessionnel', 'InsightsIndustrie', 'ÉvolutionDeCarrière', 'Storytelling']
+                    : [...toneModifier.hashtags, 'ProfessionalDevelopment', 'IndustryInsights', 'CareerGrowth', 'Storytelling'],
                 engagement: [
-                    'Share professional challenges and solutions',
-                    'Ask for industry insights and experiences',
-                    'Encourage professional networking and discussion'
+                    'Preserve storytelling hooks and personal anecdotes',
+                    'Ask for similar experiences and insights',
+                    'Encourage vulnerability and authentic sharing'
                 ]
             },
             twitter: {
