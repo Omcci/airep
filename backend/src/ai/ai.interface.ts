@@ -17,6 +17,9 @@ export interface AIAnalysisResponse {
     optimization: string
     hashtags: string[]
     engagement: string[]
+    subScores?: {
+      [key: string]: { value: number; max: number; label?: string }
+    }
   }
   metadata: {
     tokensUsed: number
@@ -35,6 +38,9 @@ export interface AIConsolidatedResponse {
     optimization: string
     hashtags: string[]
     engagement: string[]
+    subScores?: {
+      [key: string]: { value: number; max: number; label?: string }
+    }
   }
   providerInsights: {
     [provider: string]: AIAnalysisResponse
