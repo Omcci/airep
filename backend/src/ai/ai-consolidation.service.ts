@@ -104,6 +104,29 @@ export class AIConsolidationService {
             current.analysis.score > best.analysis.score ? current : best
         )
 
+        // Average subScores where available
+        const subScoreAccumulator: { [key: string]: { sum: number; max: number; count: number; label?: string } } = {}
+        responses.forEach(r => {
+            const ss = r.analysis.subScores
+            if (ss) {
+                Object.entries(ss).forEach(([key, item]: [string, any]) => {
+                    if (!subScoreAccumulator[key]) {
+                        subScoreAccumulator[key] = { sum: 0, max: item.max || 1, count: 0, label: item.label }
+                    }
+                    subScoreAccumulator[key].sum += Number(item.value) || 0
+                    subScoreAccumulator[key].count += 1
+                    subScoreAccumulator[key].max = item.max || subScoreAccumulator[key].max
+                    if (item.label) subScoreAccumulator[key].label = item.label
+                })
+            }
+        })
+        const averagedSubScores = Object.fromEntries(
+            Object.entries(subScoreAccumulator).map(([key, v]) => [
+                key,
+                { value: Math.round(v.sum / Math.max(1, v.count)), max: v.max, label: v.label }
+            ])
+        )
+
         // Combine hashtags
         const allHashtags = responses.flatMap(r => r.analysis.hashtags)
         const uniqueHashtags = [...new Set(allHashtags)]
@@ -119,6 +142,7 @@ export class AIConsolidationService {
             insights: topInsights,
             recommendations: topRecommendations,
             optimization: bestResponse.analysis.optimization,
+            subScores: Object.keys(averagedSubScores).length ? averagedSubScores : undefined,
             hashtags: topHashtags,
             engagement: topEngagement,
         }
