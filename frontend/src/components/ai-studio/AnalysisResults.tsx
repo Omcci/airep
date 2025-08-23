@@ -90,36 +90,103 @@ export default function AnalysisResults({
                         </div>
                     )}
 
-                    {/* Insights and Recommendations */}
+                    {/* Insights and Recommendations - MODERN SHADCN DESIGN */}
                     <div className="mt-6">
-                        <div className="text-sm text-muted-foreground mb-3">
+                        <div className="text-sm text-muted-foreground mb-4">
                             Based on AI analysis, here are the key insights and recommendations:
                         </div>
 
-                        {/* Insights */}
-                        <div className="space-y-4">
-                            {analysisData.insights?.map((insight: string, index: number) => (
-                                <div key={index} className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
-                                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
-                                    <p className="text-sm">{insight}</p>
-                                </div>
-                            ))}
-                        </div>
+                        {/* Modern Card-based Layout */}
+                        <div className="space-y-6">
+                            {/* AI Insights - Table Format */}
+                            {analysisData.insights && analysisData.insights.length > 0 && (
+                                <div className="space-y-3">
+                                    <div className="border-b pb-2">
+                                        <h4 className="text-sm font-semibold text-foreground">
+                                            Key Insights
+                                        </h4>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            AI analysis of your content performance
+                                        </p>
+                                    </div>
 
-                        {/* Recommendations */}
-                        {analysisData.recommendations && analysisData.recommendations.length > 0 && (
-                            <div className="mt-6">
-                                <h4 className="text-sm font-medium mb-3">Recommendations for improvement:</h4>
-                                <div className="space-y-2">
-                                    {analysisData.recommendations.map((rec: string, index: number) => (
-                                        <div key={index} className="flex items-start gap-3 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                                            <p className="text-sm text-blue-800 dark:text-blue-200">{rec}</p>
-                                        </div>
-                                    ))}
+                                    <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
+                                        <table className="w-full">
+                                            <thead className="bg-muted/50 border-b border-border">
+                                                <tr>
+                                                    <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                                        #
+                                                    </th>
+                                                    <th className="text-left p-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                                                        Insight
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {analysisData.insights.map((insight: string, index: number) => (
+                                                    <tr key={`insight-${index}`} className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors cursor-default">
+                                                        <td className="p-4 text-sm text-muted-foreground font-mono w-12">
+                                                            {index + 1}
+                                                        </td>
+                                                        <td className="p-4 text-sm text-card-foreground leading-relaxed">
+                                                            {insight}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+
+                            {/* AI Recommendations - Modern Grid Layout */}
+                            {analysisData.recommendations && analysisData.recommendations.length > 0 && (
+                                <div className="space-y-4">
+                                    <div className="border-b pb-2">
+                                        <h4 className="text-sm font-semibold text-foreground">
+                                            Actionable Recommendations
+                                        </h4>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            Implement these suggestions to improve your content
+                                        </p>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {analysisData.recommendations.map((rec: string, index: number) => (
+                                            <div key={`rec-${index}`} className="p-4 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all hover:border-primary/20">
+                                                <div className="flex items-start gap-3">
+                                                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0" />
+                                                    <div className="flex-1">
+                                                        <div className="text-xs text-muted-foreground font-medium mb-2 uppercase tracking-wide">
+                                                            Step {index + 1}
+                                                        </div>
+                                                        <p className="text-sm text-card-foreground leading-relaxed">{rec}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Fallback Message When AI Fails */}
+                            {(!analysisData.insights || analysisData.insights.length === 0) &&
+                                (!analysisData.recommendations || analysisData.recommendations.length === 0) && (
+                                    <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2 h-2 bg-destructive rounded-full" />
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium text-destructive">
+                                                    Analysis Unavailable
+                                                </p>
+                                                <p className="text-xs text-destructive/80 mt-1">
+                                                    AI analysis is currently unavailable. Please try again later.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                        </div>
                     </div>
                 </CardContent>
             </Card>
