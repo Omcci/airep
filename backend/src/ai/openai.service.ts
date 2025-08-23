@@ -177,6 +177,13 @@ EXAMPLE: If input is in French, respond like this:
 
 CRITICAL: You MUST respond in the EXACT SAME LANGUAGE as the input content. If the content is in French, respond in French. If it's in Spanish, respond in Spanish. If it's in English, respond in English. NEVER translate the language. NEVER mix languages.
 
+QUALITY REQUIREMENTS:
+- Each insight must be UNIQUE and provide different value
+- Each recommendation must be DISTINCT and actionable
+- Avoid repeating similar ideas with different wording
+- Focus on diverse aspects: structure, engagement, tone, format, etc.
+- Maximum 3-4 insights and 3-4 recommendations to ensure quality over quantity
+
 Please provide a JSON response with the following structure:
 {
   "score": 85,
