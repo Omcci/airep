@@ -208,7 +208,8 @@ export default function BottomDrawer({
 
     // Get scores from analysis data
     const originalScore = analysisData?.score || 0
-    const potentialScore = Math.min(100, originalScore + 15) // Estimate potential improvement
+    const optimizedScore = optimizationResult?.optimized?.score || originalScore
+    const potentialScore = optimizedScore // Use real optimized score instead of fake +15
 
     // Get improvements from optimization result
     const improvements = optimizationResult?.improvements || []
@@ -255,7 +256,7 @@ export default function BottomDrawer({
                                     Score: {originalScore}/100 → {potentialScore}/100
                                 </div>
                                 <div className="text-xs text-slate-300">
-                                    +{potentialScore - originalScore} points
+                                    {potentialScore > originalScore ? `+${potentialScore - originalScore} points` : 'Score maintained'}
                                 </div>
                             </div>
                             <div className="flex flex-col items-center gap-1">
@@ -278,36 +279,76 @@ export default function BottomDrawer({
                     className="h-[85vh] max-h-[85vh] overflow-hidden rounded-t-3xl border-t-2 border-gray-200 dark:border-gray-700"
                     onOpenAutoFocus={(e) => e.preventDefault()}
                 >
-                    <SheetHeader className="border-b pb-4">
+                    <SheetHeader className="border-b pb-4 flex-shrink-0">
                         <SheetTitle className="flex items-center gap-2">
                             <span className="text-lg">{platformInfo.icon}</span>
                             <span className={platformInfo.color}>Preview & Copy</span>
                         </SheetTitle>
                     </SheetHeader>
 
-                    <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{ scrollbarWidth: 'thin' }}>
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6" style={{ scrollbarWidth: 'thin', maxHeight: 'calc(85vh - 80px)' }}>
 
-                        {/* Score Section */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="border border-slate-200 dark:border-slate-600 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{originalScore}/100</div>
-                                <div className="text-sm text-slate-600 dark:text-slate-400">Original Score</div>
-                                <div className="w-full bg-slate-300 dark:bg-slate-600 rounded-full h-2 mt-2">
-                                    <div
-                                        className="bg-slate-600 dark:bg-slate-400 h-2 rounded-full transition-all duration-300"
-                                        style={{ width: `${originalScore}%` }}
-                                    />
+                        {/* Score Section - IMPROVED WITH BETTER EXPLANATIONS */}
+                        <div className="space-y-4">
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold mb-2">Content Optimization Results</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Your content has been analyzed and optimized for {platformInfo.name}
+                                </p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="border border-slate-200 dark:border-slate-600 rounded-lg p-4 text-center">
+                                    <div className="text-2xl font-bold text-slate-700 dark:text-slate-300">{originalScore}/100</div>
+                                    <div className="text-sm text-slate-600 dark:text-slate-400">Original Score</div>
+                                    <div className="w-full bg-slate-300 dark:bg-slate-600 rounded-full h-2 mt-2">
+                                        <div
+                                            className="bg-slate-600 dark:bg-slate-400 h-2 rounded-full transition-all duration-300"
+                                            style={{ width: `${originalScore}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="border border-green-200 dark:border-green-700 rounded-lg p-4 text-center relative">
+                                    <div className="text-2xl font-bold text-green-700 dark:text-green-300">{(potentialScore)}/100</div>
+                                    <div className="text-sm text-green-600 dark:text-green-400">Optimized Score</div>
+
+                                    {/* Score Improvement Indicator */}
+                                    {potentialScore > originalScore && (
+                                        <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                                            +{potentialScore - originalScore}
+                                        </div>
+                                    )}
+
+                                    {/* Score Adjustment Indicator */}
+                                    {potentialScore < originalScore && (
+                                        <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                                            Adjusted
+                                        </div>
+                                    )}
+
+                                    <div className="w-full bg-green-300 dark:bg-green-600 rounded-full h-2 mt-2">
+                                        <div
+                                            className="bg-green-600 dark:bg-green-400 h-2 rounded-full transition-all duration-300"
+                                            style={{ width: `${potentialScore}%` }}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                            <div className="border border-green-200 dark:border-green-700 rounded-lg p-4 text-center">
-                                <div className="text-2xl font-bold text-green-700 dark:text-green-300">{potentialScore}/100</div>
-                                <div className="text-sm text-green-600 dark:text-green-400">Potential Score</div>
-                                <div className="w-full bg-green-300 dark:bg-green-600 rounded-full h-2 mt-2">
-                                    <div
-                                        className="bg-green-600 dark:bg-green-400 h-2 rounded-full transition-all duration-300"
-                                        style={{ width: `${potentialScore}%` }}
-                                    />
-                                </div>
+
+                            {/* Score Explanation */}
+                            <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <p className="text-sm text-blue-800 dark:text-blue-200">
+                                    {potentialScore > originalScore ? (
+                                        <><strong>Great improvement!</strong> Your content score increased by {potentialScore - originalScore} points through AI optimization.</>
+                                    ) : potentialScore === originalScore ? (
+                                        <><strong>Score maintained.</strong> Your content was already well-optimized for {platformInfo.name}!</>
+                                    ) : (
+                                        <><strong>Score adjustment.</strong> AI analysis provided different insights for better optimization. The new score reflects improved content structure and engagement.</>
+                                    )}
+                                </p>
+                                <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
+                                    Scores are based on platform-specific criteria including engagement, structure, and optimization best practices.
+                                </p>
                             </div>
                         </div>
 
@@ -349,7 +390,7 @@ export default function BottomDrawer({
                                         <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
                                         Original Content
                                     </h4>
-                                    <div className="w-full h-40 bg-muted/30 rounded-lg p-3 border overflow-y-auto">
+                                    <div className="w-full h-48 bg-muted/30 rounded-lg p-3 border overflow-y-auto">
                                         <pre className="whitespace-pre-wrap text-sm text-foreground m-0">{originalContent}</pre>
                                     </div>
                                     <div className="flex justify-end">
@@ -369,7 +410,7 @@ export default function BottomDrawer({
                                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                                         Optimized Content
                                     </h4>
-                                    <div className="w-full h-40 bg-muted/30 rounded-lg p-3 border overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                                    <div className="w-full h-48 bg-muted/30 rounded-lg p-3 border overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                                         <pre className="whitespace-pre-wrap text-sm text-foreground m-0">{currentContent}</pre>
                                     </div>
                                     <div className="flex items-center justify-end gap-1">
