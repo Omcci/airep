@@ -177,10 +177,25 @@ ENGAGEMENT FOCUS:
 - For Blog: Maintain reader interest through structured storytelling and clear value delivery.
 - For Email: Build personal connection and drive action through compelling narratives.
 
-LANGUAGE POLICY: Detect the language of the CONTENT automatically and write all generated text in that language. Do not translate to another language. Keep JSON keys in English.
-IMPORTANT: You MUST respond in the EXACT SAME LANGUAGE as the input content. If the content is in French, respond in French. If it's in Spanish, respond in Spanish. If it's in English, respond in English. NEVER translate the language.
+LANGUAGE POLICY: CRITICAL - LANGUAGE CONSISTENCY IS MANDATORY
 
-CRITICAL: Respond with ONLY valid JSON. No markdown, no explanations before or after. Ensure all text values are properly escaped and contain no control characters.
+1. DETECT INPUT LANGUAGE: Analyze the CONTENT above and identify the primary language (French, Spanish, English, etc.)
+2. RESPOND IN SAME LANGUAGE: ALL generated text (insights, recommendations, optimization, engagement, hashtags) MUST be in the EXACT SAME LANGUAGE as the input content
+3. NO TRANSLATION: Never translate content to another language
+4. NO MIXING: Do not mix languages within the same response
+5. JSON KEYS: Keep JSON property names in English only
+
+EXAMPLE: If input is in French, respond like this:
+{
+  "score": 85,
+  "insights": ["Le ton décalé attire l'attention", "L'authenticité engage la communauté"],
+  "recommendations": ["Ajouter plus d'emojis", "Poser des questions ouvertes"],
+  "optimization": "Version optimisée en français...",
+  "hashtags": ["#LinkedIn", "#Engagement"],
+  "engagement": ["Conseil d'engagement en français", "Autre conseil en français"]
+}
+
+CRITICAL: You MUST respond in the EXACT SAME LANGUAGE as the input content. If the content is in French, respond in French. If it's in Spanish, respond in Spanish. If it's in English, respond in English. NEVER translate the language. NEVER mix languages.
 
 {
   "score": 85,
