@@ -172,11 +172,22 @@ export default function AISEOStudio() {
                 </Card>
 
                 {/* Step 2: Analysis Results - Show inline immediately */}
-                {auditMutation.data && (
+                {auditMutation.isPending ? (
+                    // Show skeleton while initially loading
+                    <div ref={analysisRef}>
+                        <AnalysisResults
+                            analysisData={null}
+                            isVisible={true}
+                            isLoading={true}
+                        />
+                    </div>
+                ) : auditMutation.data ? (
+                    // Show actual results when data is available
                     <div ref={analysisRef}>
                         <AnalysisResults
                             analysisData={auditMutation.data}
                             isVisible={true}
+                            isLoading={false}
                         />
                         {/* Processing message appears after Analysis Results */}
                         {isWorking && (
@@ -196,7 +207,7 @@ export default function AISEOStudio() {
                             </div>
                         )}
                     </div>
-                )}
+                ) : null}
 
                 {/* Step 3: Preview - Show inline when ready */}
                 {currentStep === 'preview' && (optimizeMutation.data || boostToolMutation.data) && (
