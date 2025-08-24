@@ -269,12 +269,7 @@ export default function BottomDrawer({
     const content = getOptimizedContent()
     const originalContent = getOriginalContent()
 
-    // Debug logging to see what's available
-    console.log('Content Type:', contentType)
-    console.log('Optimization Result:', optimizationResult)
-    console.log('Tool:', tool)
-    console.log('Original Content:', originalContent)
-    console.log('Optimized Content:', content)
+
 
     // Get scores from analysis data
     const originalScore = analysisData?.score || 0
@@ -360,7 +355,7 @@ export default function BottomDrawer({
                 >
                     {/* Drag Handle Area - Always visible at the top */}
                     <div
-                        className={`px-6 py-3 border-b border-border cursor-ns-resize select-none transition-all duration-500 ${isExpanded ? 'px-8 py-4' : 'px-6 py-3'
+                        className={`px-6 py-3 cursor-ns-resize select-none transition-all duration-500 ${isExpanded ? 'px-8 py-4' : 'px-6 py-3'
                             }`}
                         onMouseDown={(e) => {
                             if (e.button !== 0) return
@@ -562,12 +557,6 @@ export default function BottomDrawer({
                             height: isExpanded ? 'calc(100vh - 140px)' : 'auto',
                             maxHeight: isExpanded ? 'calc(100vh - 140px)' : 'auto'
                         }}>
-                        {/* Debug info - remove in production */}
-                        {process.env.NODE_ENV === 'development' && (
-                            <div className="text-xs text-muted-foreground mb-2">
-                                Debug: isExpanded={isExpanded.toString()}, dragProgress={dragProgress.toFixed(2)}
-                            </div>
-                        )}
                         <div className={`transition-all duration-500 ${isExpanded ? 'max-w-6xl mx-auto space-y-8' : 'space-y-6'
                             }`}>
                             {/* Score Section */}
