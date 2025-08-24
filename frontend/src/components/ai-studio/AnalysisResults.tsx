@@ -1,17 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { HelpCircle } from 'lucide-react'
+import AnalysisResultsSkeleton from './AnalysisResultsSkeleton'
 
 interface AnalysisResultsProps {
     analysisData: any
     isVisible: boolean
+    isLoading?: boolean
 }
 
 export default function AnalysisResults({
     analysisData,
-    isVisible
+    isVisible,
+    isLoading = false
 }: AnalysisResultsProps) {
-    if (!isVisible || !analysisData) return null
+    if (!isVisible) return null
+
+    // Show skeleton while loading
+    if (isLoading) {
+        return <AnalysisResultsSkeleton />
+    }
+
+    if (!analysisData) return null
 
     const getScoreDescription = (scoreType: string) => {
         switch (scoreType) {
