@@ -49,27 +49,92 @@ const sheetVariants = cva(
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+  VariantProps<typeof sheetVariants> {
+  onDragUp?: () => void
+}
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      {...props}
-    >
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-      {children}
-    </SheetPrimitive.Content>
-  </SheetPortal>
-))
+>(({ side = "right", className, children, onDragUp, ...props }, ref) => {
+  const [dragStartY, setDragStartY] = React.useState(0)
+  const [isDragging, setIsDragging] = React.useState(false)
+
+  const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    setDragStartY(clientY)
+    setIsDragging(true)
+  }
+
+  const handleDragMove = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!isDragging || !onDragUp) return
+
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY
+    const deltaY = dragStartY - clientY
+
+    // If dragging up more than 50px, trigger drag up callback
+    if (deltaY > 50) {
+      onDragUp()
+      setIsDragging(false)
+    }
+  }
+
+  const handleDragEnd = () => {
+    setIsDragging(false)
+  }
+
+  // Handle mouse events for desktop
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return // Only left mouse button
+    handleDragStart(e)
+
+    // Add global mouse event listeners for desktop
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !onDragUp) return
+
+      const deltaY = dragStartY - e.clientY
+      if (deltaY > 50) {
+        onDragUp()
+        setIsDragging(false)
+        document.removeEventListener('mousemove', handleGlobalMouseMove)
+        document.removeEventListener('mouseup', handleGlobalMouseUp)
+      }
+    }
+
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false)
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+  }
+
+  return (
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(sheetVariants({ side }), className)}
+        onTouchStart={handleDragStart}
+        onTouchMove={handleDragMove}
+        onTouchEnd={handleDragEnd}
+        onMouseDown={handleMouseDown}
+        {...props}
+      >
+        {/* Only show close button if onDragUp is not provided */}
+        {!onDragUp && (
+          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </SheetPrimitive.Close>
+        )}
+        {children}
+      </SheetPrimitive.Content>
+    </SheetPortal>
+  )
+})
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({
