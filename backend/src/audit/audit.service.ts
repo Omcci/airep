@@ -39,9 +39,16 @@ export class AuditService {
             }
             lastAIResult = await this.aiService.analyzeContent(aiRequest, 'anonymous')
             const { score, recommendations, insights } = this.extractAIAnalysis(lastAIResult)
-            aiScore = score
-            aiRecommendations = recommendations
-            aiInsights = insights
+
+            // Validate and fix language consistency in AI analysis
+            const validatedAIAnalysis = this.validateLanguageConsistency({ score, recommendations, insights }, content)
+
+            // Deduplicate insights and recommendations to avoid redundancy
+            const deduplicatedAIAnalysis = this.deduplicateAnalysis(validatedAIAnalysis)
+
+            aiScore = deduplicatedAIAnalysis.score
+            aiRecommendations = deduplicatedAIAnalysis.recommendations
+            aiInsights = deduplicatedAIAnalysis.insights
 
             this.logger.debug(`[evaluateContent] AI analysis successful - Score: ${aiScore}, Recommendations: ${aiRecommendations?.length || 0}, Insights: ${aiInsights?.length || 0}`)
         } catch (e) {
@@ -112,12 +119,19 @@ export class AuditService {
             console.log('AI Service returned:', JSON.stringify(aiResult, null, 2))
             console.log('Original content language check:', content.substring(0, 100))
 
+            // Extract AI analysis results
+            const aiAnalysis = this.extractAIAnalysis(aiResult)
+
+            // Validate and fix language consistency in AI analysis
+            const validatedAIAnalysis = this.validateLanguageConsistency(aiAnalysis, content)
+
+            // Deduplicate insights and recommendations to avoid redundancy
+            const deduplicatedAIAnalysis = this.deduplicateAnalysis(validatedAIAnalysis)
+
             // Extract optimized content from AI result
             const optimizedContent = this.extractOptimizedContent(aiResult, content, platform, tone)
             const finalOptimizedContent = this.sanitizeForPlatform(optimizedContent, platform)
 
-            // Extract AI analysis (score, recommendations) and merge with heuristic details
-            const aiAnalysis = this.extractAIAnalysis(aiResult)
             const heuristicAnalysis = await this.evaluateContent(content, platform)
 
             this.logger.debug(`[optimizeContent] AI Analysis - Score: ${aiAnalysis.score}, Recommendations: ${aiAnalysis.recommendations?.length || 0}`)
@@ -125,40 +139,28 @@ export class AuditService {
 
             const analysis = {
                 ...heuristicAnalysis,
-                score: typeof aiAnalysis.score === 'number' ? aiAnalysis.score : heuristicAnalysis.score,
-                recommendations: Array.isArray(aiAnalysis.recommendations) && aiAnalysis.recommendations.length > 0
-                    ? aiAnalysis.recommendations
+                score: typeof validatedAIAnalysis.score === 'number' ? validatedAIAnalysis.score : heuristicAnalysis.score,
+                recommendations: Array.isArray(validatedAIAnalysis.recommendations) && validatedAIAnalysis.recommendations.length > 0
+                    ? validatedAIAnalysis.recommendations
                     : heuristicAnalysis.recommendations,
-                insights: Array.isArray(aiAnalysis.insights) && aiAnalysis.insights.length > 0
-                    ? aiAnalysis.insights
+                insights: Array.isArray(validatedAIAnalysis.insights) && validatedAIAnalysis.insights.length > 0
+                    ? validatedAIAnalysis.insights
                     : heuristicAnalysis.insights
             }
 
             this.logger.debug(`[optimizeContent] Final Analysis - Score: ${analysis.score}, Recommendations: ${analysis.recommendations?.length || 0}`)
 
-            // FIXED: Use AI's actual score for optimized content, but ensure it's never lower than original
+            // FIXED: Use AI's actual score for optimized content - NO ARTIFICIAL MANIPULATION
             let optimizedScore = typeof aiAnalysis.score === 'number' ? aiAnalysis.score : heuristicAnalysis.score
 
-            // CRITICAL FIX: Optimized score should never be lower than original
-            // If AI gives a lower score, use the original score + a meaningful improvement
-            if (optimizedScore < analysis.score) {
-                this.logger.warn(`[optimizeContent] AI score (${optimizedScore}) is lower than original (${analysis.score}). Using original + improvement.`)
-
-                // Calculate improvement based on content quality
-                const contentLength = finalOptimizedContent.length
-                const hasQuestions = /[?]/.test(finalOptimizedContent)
-                const hasCallToAction = /(share|comment|discuss|think|experience)/i.test(finalOptimizedContent)
-                const hasPersonalTouch = /(je|moi|mon|ma|mes|nous|notre)/i.test(finalOptimizedContent)
-
-                let improvement = 1 // Base improvement
-                if (hasQuestions) improvement += 2
-                if (hasCallToAction) improvement += 2
-                if (hasPersonalTouch) improvement += 1
-                if (contentLength > 500) improvement += 1
-
-                optimizedScore = Math.min(100, analysis.score + improvement)
-                this.logger.debug(`[optimizeContent] Applied intelligent improvement: +${improvement} points`)
+            // CRITICAL: Only use real AI scores, never artificially boost
+            // If AI score is lower than original, that's the real assessment
+            if (optimizedScore <= analysis.score) {
+                this.logger.debug(`[optimizeContent] AI score (${optimizedScore}) is not higher than original (${analysis.score}). This is the real AI assessment.`)
             }
+
+            // Check if content was actually improved or just reformatted
+            const contentImprovement = this.assessContentImprovement(content, finalOptimizedContent)
 
             this.logger.debug(`[optimizeContent] Final Optimized Score: ${optimizedScore} (Original: ${analysis.score}, AI: ${aiAnalysis.score}, Heuristic: ${heuristicAnalysis.score})`)
 
@@ -167,10 +169,14 @@ export class AuditService {
                 original: analysis,
                 optimized: {
                     content: finalOptimizedContent,
-                    score: optimizedScore, // Use AI score directly
-                    details: analysis.details, // Use original analysis details
+                    score: optimizedScore, // Use real AI score, no manipulation
+                    details: analysis.details,
                     improvements: this.getImprovementSuggestions(analysis.details),
-                    tone: tone
+                    tone: tone,
+                    canBeImproved: contentImprovement.isSignificantlyImproved,
+                    improvementMessage: contentImprovement.message,
+                    shouldShowResults: true, // Always show results, but with appropriate messaging
+                    scoreImproved: optimizedScore > analysis.score // Track if score actually improved
                 }
             }
         } catch (error) {
@@ -1241,5 +1247,263 @@ export class AuditService {
             this.logger.error(`[extractAIAnalysis] Failed to extract AI analysis: ${error.message}`)
             return {}
         }
+    }
+
+    /**
+     * Validate and fix language consistency in AI responses
+     * Ensures all insights and recommendations are in the same language as the input content
+     */
+    private validateLanguageConsistency(aiResponse: any, originalContent: string): any {
+        try {
+            // Detect the primary language of the original content
+            const inputLanguage = this.detectLanguage(originalContent)
+            this.logger.debug(`[validateLanguageConsistency] Detected input language: ${inputLanguage}`)
+
+            if (!aiResponse) return aiResponse
+
+            // Fix insights language
+            if (Array.isArray(aiResponse.insights)) {
+                aiResponse.insights = aiResponse.insights.map((insight: string) => {
+                    if (typeof insight === 'string' && this.detectLanguage(insight) !== inputLanguage) {
+                        this.logger.warn(`[validateLanguageConsistency] Fixed insight language mismatch: "${insight.substring(0, 50)}..."`)
+                        return this.translateToLanguage(insight, inputLanguage) || insight
+                    }
+                    return insight
+                })
+            }
+
+            // Fix recommendations language
+            if (Array.isArray(aiResponse.recommendations)) {
+                aiResponse.recommendations = aiResponse.recommendations.map((rec: string) => {
+                    if (typeof rec === 'string' && this.detectLanguage(rec) !== inputLanguage) {
+                        this.logger.warn(`[validateLanguageConsistency] Fixed recommendation language mismatch: "${rec.substring(0, 50)}..."`)
+                        return this.translateToLanguage(rec, inputLanguage) || rec
+                    }
+                    return rec
+                })
+            }
+
+            // Fix engagement tips language
+            if (Array.isArray(aiResponse.engagement)) {
+                aiResponse.engagement = aiResponse.engagement.map((tip: string) => {
+                    if (typeof tip === 'string' && this.detectLanguage(tip) !== inputLanguage) {
+                        this.logger.warn(`[validateLanguageConsistency] Fixed engagement tip language mismatch: "${tip.substring(0, 50)}..."`)
+                        return this.translateToLanguage(tip, inputLanguage) || tip
+                    }
+                    return tip
+                })
+            }
+
+            return aiResponse
+        } catch (error) {
+            this.logger.error(`[validateLanguageConsistency] Error validating language consistency: ${error.message}`)
+            return aiResponse
+        }
+    }
+
+    /**
+     * Simple language detection based on common patterns
+     */
+    private detectLanguage(text: string): string {
+        if (!text) return 'unknown'
+
+        const frenchPatterns = /[àâäéèêëïîôöùûüÿçœæ]/i
+        const spanishPatterns = /[áéíóúñü¿¡]/i
+        const germanPatterns = /[äöüß]/i
+
+        if (frenchPatterns.test(text)) return 'french'
+        if (spanishPatterns.test(text)) return 'spanish'
+        if (germanPatterns.test(text)) return 'german'
+
+        // Default to English if no special characters found
+        return 'english'
+    }
+
+    /**
+     * Simple translation fallback for common phrases
+     * This is a basic fallback - in production you might want to use a proper translation service
+     */
+    private translateToLanguage(text: string, targetLanguage: string): string | null {
+        if (targetLanguage === 'french') {
+            // Common English to French translations for insights/recommendations
+            const translations: { [key: string]: string } = {
+                'The content is highly engaging': 'Le contenu est très engageant',
+                'with a strong personal touch': 'avec une touche personnelle forte',
+                'which resonates well on': 'qui résonne bien sur',
+                'The self-deprecating humor': 'L\'humour auto-dérisoire',
+                'and vulnerability make': 'et la vulnérabilité rendent',
+                'increasing engagement potential': 'augmentant le potentiel d\'engagement',
+                'Use emojis to add visual appeal': 'Utilisez des emojis pour ajouter de l\'attrait visuel',
+                'Ask open-ended questions': 'Posez des questions ouvertes',
+                'to encourage responses': 'pour encourager les réponses',
+                'and discussions': 'et les discussions'
+            }
+
+            for (const [english, french] of Object.entries(translations)) {
+                text = text.replace(new RegExp(english, 'gi'), french)
+            }
+
+            return text
+        }
+
+        // For other languages, return null to keep original text
+        return null
+    }
+
+    /**
+     * Assess whether the optimized content is significantly improved compared to the original
+     */
+    private assessContentImprovement(originalContent: string, optimizedContent: string): { isSignificantlyImproved: boolean; message: string } {
+        try {
+            const originalLength = originalContent.length
+            const optimizedLength = optimizedContent.length
+
+            // Check if content is essentially the same (just reformatted)
+            const originalWords = originalContent.toLowerCase().split(/\s+/).filter(word => word.length > 2)
+            const optimizedWords = optimizedContent.toLowerCase().split(/\s+/).filter(word => word.length > 2)
+
+            const commonWords = originalWords.filter(word => optimizedWords.includes(word))
+            const similarity = commonWords.length / Math.max(originalWords.length, optimizedWords.length)
+
+            // If similarity is too high, content wasn't really improved
+            if (similarity > 0.8) {
+                return {
+                    isSignificantlyImproved: false,
+                    message: 'Content cannot be significantly improved - it\'s already well-optimized for the platform.'
+                }
+            }
+
+            // Check for meaningful improvements
+            const hasQuestions = /[?]/.test(optimizedContent) && !/[?]/.test(originalContent)
+            const hasCallToAction = /(partagez|comment|discutez|pensez|expérience)/i.test(optimizedContent) &&
+                !/(partagez|comment|discutez|pensez|expérience)/i.test(originalContent)
+            const hasBetterStructure = optimizedContent.includes('•') || optimizedContent.includes('-') ||
+                optimizedContent.includes('1.') || optimizedContent.includes('2.')
+
+            if (hasQuestions || hasCallToAction || hasBetterStructure) {
+                return {
+                    isSignificantlyImproved: true,
+                    message: 'Content has been enhanced with better engagement elements and structure.'
+                }
+            }
+
+            // Check if length changed significantly (might indicate improvement or degradation)
+            const lengthRatio = optimizedLength / originalLength
+            if (lengthRatio < 0.7 || lengthRatio > 1.5) {
+                return {
+                    isSignificantlyImproved: false,
+                    message: 'Content length changed significantly - may have lost authenticity or added unnecessary complexity.'
+                }
+            }
+
+            // Default case - content wasn't significantly improved
+            return {
+                isSignificantlyImproved: false,
+                message: 'Content maintains similar quality - consider keeping the original for authenticity.'
+            }
+
+        } catch (error) {
+            this.logger.error(`[assessContentImprovement] Error assessing content improvement: ${error.message}`)
+            return { isSignificantlyImproved: true, message: 'Content optimization completed.' }
+        }
+    }
+
+    /**
+     * Deduplicate insights and recommendations to remove redundant and similar content
+     */
+    private deduplicateAnalysis(analysis: { score?: number; recommendations?: string[]; insights?: string[] }): { score?: number; recommendations?: string[]; insights?: string[] } {
+        try {
+            const deduplicatedInsights = this.removeSimilarInsights(analysis.insights || [])
+            const deduplicatedRecommendations = this.removeSimilarRecommendations(analysis.recommendations || [])
+
+            this.logger.debug(`[deduplicateAnalysis] Deduplicated insights: ${analysis.insights?.length || 0} → ${deduplicatedInsights.length}`)
+            this.logger.debug(`[deduplicateAnalysis] Deduplicated recommendations: ${analysis.recommendations?.length || 0} → ${deduplicatedRecommendations.length}`)
+
+            return {
+                ...analysis,
+                insights: deduplicatedInsights,
+                recommendations: deduplicatedRecommendations
+            }
+        } catch (error) {
+            this.logger.error(`[deduplicateAnalysis] Error deduplicating analysis: ${error.message}`)
+            return analysis
+        }
+    }
+
+    /**
+     * Remove semantically similar insights
+     */
+    private removeSimilarInsights(insights: string[]): string[] {
+        if (insights.length <= 1) return insights
+
+        const uniqueInsights: string[] = []
+        const similarityThreshold = 0.5 // More aggressive: 50% similarity threshold
+
+        for (const insight of insights) {
+            let isDuplicate = false
+
+            for (const uniqueInsight of uniqueInsights) {
+                const similarity = this.calculateSimilarity(insight, uniqueInsight)
+                if (similarity > similarityThreshold) {
+                    isDuplicate = true
+                    this.logger.debug(`[removeSimilarInsights] Removed duplicate insight: "${insight.substring(0, 50)}..." (similarity: ${similarity.toFixed(2)})`)
+                    break
+                }
+            }
+
+            if (!isDuplicate) {
+                uniqueInsights.push(insight)
+            }
+        }
+
+        // Limit to maximum 3 insights to avoid redundancy
+        return uniqueInsights.slice(0, 3)
+    }
+
+    /**
+     * Remove semantically similar recommendations
+     */
+    private removeSimilarRecommendations(recommendations: string[]): string[] {
+        if (recommendations.length <= 1) return recommendations
+
+        const uniqueRecommendations: string[] = []
+        const similarityThreshold = 0.4 // More aggressive: 40% similarity threshold for recommendations
+
+        for (const rec of recommendations) {
+            let isDuplicate = false
+
+            for (const uniqueRec of uniqueRecommendations) {
+                const similarity = this.calculateSimilarity(rec, uniqueRec)
+                if (similarity > similarityThreshold) {
+                    isDuplicate = true
+                    this.logger.debug(`[removeSimilarRecommendations] Removed duplicate recommendation: "${rec.substring(0, 50)}..." (similarity: ${similarity.toFixed(2)})`)
+                    break
+                }
+            }
+
+            if (!isDuplicate) {
+                uniqueRecommendations.push(rec)
+            }
+        }
+
+        // Limit to maximum 3 recommendations to avoid redundancy
+        return uniqueRecommendations.slice(0, 3)
+    }
+
+    /**
+     * Calculate similarity between two strings using word overlap
+     */
+    private calculateSimilarity(str1: string, str2: string): number {
+        if (!str1 || !str2) return 0
+
+        const words1 = str1.toLowerCase().split(/\s+/).filter(word => word.length > 2)
+        const words2 = str2.toLowerCase().split(/\s+/).filter(word => word.length > 2)
+
+        if (words1.length === 0 || words2.length === 0) return 0
+
+        const commonWords = words1.filter(word => words2.includes(word))
+        const totalWords = new Set([...words1, ...words2]).size
+
+        return commonWords.length / totalWords
     }
 }
