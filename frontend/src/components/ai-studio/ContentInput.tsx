@@ -75,14 +75,17 @@ export default function ContentInput({
             <TabsContent value="content" className="space-y-4">
                 <div className="space-y-2">
                     <label htmlFor="content" className="text-sm font-medium">
-                        Paste your content here
+                        {platform === 'twitter' ? 'Paste your tweet or thread here' : 'Paste your content here'}
                     </label>
                     <Textarea
                         id="content"
-                        placeholder="Enter your content to analyze and optimize..."
+                        placeholder={platform === 'twitter'
+                            ? "Paste your tweet or thread content here...\nFor threads, you can:\n• Paste all tweets separated by new lines\n• Use '---' to separate tweets\n• Or paste as one continuous text"
+                            : "Enter your content to analyze and optimize..."
+                        }
                         value={content}
                         onChange={(e) => onContentChange(e.target.value)}
-                        className="min-h-[120px]"
+                        className="min-h-[120px] text-sm"
                     />
                 </div>
                 <Button
