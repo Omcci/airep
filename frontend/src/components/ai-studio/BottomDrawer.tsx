@@ -316,14 +316,25 @@ export default function BottomDrawer({
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <div className="text-right">
-                                <div className="text-sm font-medium text-white">
-                                    Score: {originalScore}/100 → {potentialScore}/100
+                            {potentialScore > originalScore ? (
+                                <div className="text-right">
+                                    <div className="text-sm font-medium text-white">
+                                        Score: {originalScore}/100 → {potentialScore}/100
+                                    </div>
+                                    <div className="text-xs text-slate-300">
+                                        +{potentialScore - originalScore} points
+                                    </div>
                                 </div>
-                                <div className="text-xs text-slate-300">
-                                    {potentialScore > originalScore ? `+${potentialScore - originalScore} points` : 'Score maintained'}
+                            ) : (
+                                <div className="text-right">
+                                    <div className="text-sm font-medium text-white">
+                                        Content Analyzed
+                                    </div>
+                                    <div className="text-xs text-slate-300">
+                                        Already optimized
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             <div className="flex flex-col items-center gap-1">
                                 <div className="text-white text-xs font-medium">Click to view</div>
                                 <div className="w-4 h-4 bg-slate-600 dark:bg-slate-700 rounded-full flex items-center justify-center">
@@ -559,141 +570,144 @@ export default function BottomDrawer({
                         }}>
                         <div className={`transition-all duration-500 ${isExpanded ? 'max-w-6xl mx-auto space-y-8' : 'space-y-6'
                             }`}>
-                            {/* Score Section */}
-                            <div className={`space-y-4 transition-all duration-500 ${isExpanded ? 'space-y-6' : 'space-y-4'
-                                }`}>
-                                <div className="text-center">
-                                    <h3 className={`font-semibold mb-2 transition-all duration-500 ${isExpanded ? 'text-2xl' : 'text-lg'
-                                        }`}>Content Optimization Results</h3>
-                                    <p className={`text-muted-foreground transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
-                                        }`}>
-                                        Your content has been analyzed and optimized for {platformInfo.name}
-                                    </p>
-                                </div>
-
-                                {/* Score Cards - Responsive Grid */}
-                                <div className="flex justify-center">
-                                    <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 transition-all duration-500 ${isExpanded ? 'gap-6 max-w-3xl' : 'gap-4 max-w-2xl'
-                                        }`}>
-                                        {/* Original Score Card */}
-                                        <div className={`bg-card border border-border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-all duration-500 ${isExpanded ? 'p-6 rounded-2xl shadow-lg hover:shadow-xl' : 'p-4 rounded-xl shadow-sm hover:shadow-md'
+                            {/* Score Section - Only show when there's actual improvement */}
+                            {potentialScore > originalScore && (
+                                <div className={`space-y-4 transition-all duration-500 ${isExpanded ? 'space-y-6' : 'space-y-4'
+                                    }`}>
+                                    <div className="text-center">
+                                        <h3 className={`font-semibold mb-2 transition-all duration-500 ${isExpanded ? 'text-2xl' : 'text-lg'
+                                            }`}>Content Optimization Results</h3>
+                                        <p className={`text-muted-foreground transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
                                             }`}>
-                                            <div className={`relative inline-flex items-center justify-center mx-auto mb-3 transition-all duration-500 ${isExpanded ? 'w-24 h-24 mb-4' : 'w-20 h-20 mb-3'
+                                            Your content has been analyzed and optimized for {platformInfo.name}
+                                        </p>
+                                    </div>
+
+                                    {/* Score Cards - Responsive Grid */}
+                                    <div className="flex justify-center">
+                                        <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 transition-all duration-500 ${isExpanded ? 'gap-6 max-w-3xl' : 'gap-4 max-w-2xl'
+                                            }`}>
+                                            {/* Original Score Card */}
+                                            <div className={`bg-card border border-border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-all duration-500 ${isExpanded ? 'p-6 rounded-2xl shadow-lg hover:shadow-xl' : 'p-4 rounded-xl shadow-sm hover:shadow-md'
                                                 }`}>
-                                                {/* Circular Progress Ring */}
-                                                <svg className={`transform -rotate-90 transition-all duration-500 ${isExpanded ? 'w-24 h-24' : 'w-20 h-20'
-                                                    }`} viewBox="0 0 36 36">
-                                                    <path
-                                                        className="text-slate-200 dark:text-slate-700"
-                                                        stroke="currentColor"
-                                                        strokeWidth={isExpanded ? "3" : "2.5"}
-                                                        fill="none"
-                                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                    />
-                                                    <path
-                                                        className="text-slate-600 dark:text-slate-400 transition-all duration-1500 ease-out"
-                                                        stroke="currentColor"
-                                                        strokeWidth={isExpanded ? "3" : "2.5"}
-                                                        strokeLinecap="round"
-                                                        fill="none"
-                                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                        strokeDasharray={`${(originalScore / 100) * 100}, 100`}
-                                                        style={{
-                                                            strokeDasharray: `${(originalScore / 100) * 100}, 100`,
-                                                            animation: 'progressAnimation 1.5s ease-out'
-                                                        }}
-                                                    />
-                                                </svg>
-                                                {/* Score Text */}
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <span className={`font-bold text-slate-700 dark:text-slate-300 transition-all duration-500 ${isExpanded ? 'text-2xl' : 'text-xl'
-                                                        }`}>
-                                                        {originalScore}
-                                                    </span>
+                                                <div className={`relative inline-flex items-center justify-center mx-auto mb-3 transition-all duration-500 ${isExpanded ? 'w-24 h-24 mb-4' : 'w-20 h-20 mb-3'
+                                                    }`}>
+                                                    {/* Circular Progress Ring */}
+                                                    <svg className={`transform -rotate-90 transition-all duration-500 ${isExpanded ? 'w-24 h-24' : 'w-20 h-20'
+                                                        }`} viewBox="0 0 36 36">
+                                                        <path
+                                                            className="text-slate-200 dark:text-slate-700"
+                                                            stroke="currentColor"
+                                                            strokeWidth={isExpanded ? "3" : "2.5"}
+                                                            fill="none"
+                                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                        />
+                                                        <path
+                                                            className="text-slate-600 dark:text-slate-400 transition-all duration-1500 ease-out"
+                                                            stroke="currentColor"
+                                                            strokeWidth={isExpanded ? "3" : "2.5"}
+                                                            strokeLinecap="round"
+                                                            fill="none"
+                                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                            strokeDasharray={`${(originalScore / 100) * 100}, 100`}
+                                                            style={{
+                                                                strokeDasharray: `${(originalScore / 100) * 100}, 100`,
+                                                                animation: 'progressAnimation 1.5s ease-out'
+                                                            }}
+                                                        />
+                                                    </svg>
+                                                    {/* Score Text */}
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <span className={`font-bold text-slate-700 dark:text-slate-300 transition-all duration-500 ${isExpanded ? 'text-2xl' : 'text-xl'
+                                                            }`}>
+                                                            {originalScore}
+                                                        </span>
+                                                    </div>
                                                 </div>
+                                                <div className={`font-medium text-slate-600 dark:text-slate-400 transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
+                                                    }`}>Original Score</div>
+                                                <div className={`text-muted-foreground mt-1 transition-all duration-500 ${isExpanded ? 'text-sm' : 'text-xs'
+                                                    }`}>Baseline assessment</div>
                                             </div>
-                                            <div className={`font-medium text-slate-600 dark:text-slate-400 transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
-                                                }`}>Original Score</div>
-                                            <div className={`text-muted-foreground mt-1 transition-all duration-500 ${isExpanded ? 'text-sm' : 'text-xs'
-                                                }`}>Baseline assessment</div>
-                                        </div>
 
-                                        {/* Optimized Score Card */}
-                                        <div className={`bg-card border border-border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-all duration-500 relative ${isExpanded ? 'p-6 rounded-2xl shadow-lg hover:shadow-xl' : 'p-4 rounded-xl shadow-sm hover:shadow-md'
-                                            }`}>
-                                            {/* Improvement Badge */}
-                                            {potentialScore > originalScore && (
+                                            {/* Optimized Score Card */}
+                                            <div className={`bg-card border border-border rounded-xl p-4 text-center shadow-sm hover:shadow-md transition-all duration-500 relative ${isExpanded ? 'p-6 rounded-2xl shadow-lg hover:shadow-xl' : 'p-4 rounded-xl shadow-sm hover:shadow-md'
+                                                }`}>
+                                                {/* Improvement Badge */}
                                                 <div className={`absolute text-white font-bold rounded-full shadow-lg transition-all duration-500 ${isExpanded ? '-top-3 -right-3 bg-green-500 text-sm px-3 py-1' : '-top-2 -right-2 bg-green-500 text-xs px-2 py-1'
                                                     }`}>
                                                     +{potentialScore - originalScore}
                                                 </div>
-                                            )}
 
-                                            <div className={`relative inline-flex items-center justify-center mx-auto mb-3 transition-all duration-500 ${isExpanded ? 'w-24 h-24 mb-4' : 'w-20 h-20 mb-3'
-                                                }`}>
-                                                {/* Circular Progress Ring */}
-                                                <svg className={`transform -rotate-90 transition-all duration-500 ${isExpanded ? 'w-24 h-24' : 'w-20 h-20'
-                                                    }`} viewBox="0 0 36 36">
-                                                    <path
-                                                        className="text-green-200 dark:text-green-800"
-                                                        stroke="currentColor"
-                                                        strokeWidth={isExpanded ? "3" : "2.5"}
-                                                        fill="none"
-                                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                    />
-                                                    <path
-                                                        className="text-green-600 dark:text-green-400 transition-all duration-1500 ease-out"
-                                                        stroke="currentColor"
-                                                        strokeWidth={isExpanded ? "3" : "2.5"}
-                                                        strokeLinecap="round"
-                                                        fill="none"
-                                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                                                        strokeDasharray={`${(potentialScore / 100) * 100}, 100`}
-                                                        style={{
-                                                            strokeDasharray: `${(potentialScore / 100) * 100}, 100`,
-                                                            animation: 'progressAnimation 1.5s ease-out'
-                                                        }}
-                                                    />
-                                                </svg>
-                                                {/* Score Text */}
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <span className={`font-bold text-green-700 dark:text-green-300 transition-all duration-500 ${isExpanded ? 'text-2xl' : 'text-xl'
-                                                        }`}>
-                                                        {potentialScore}
-                                                    </span>
+                                                <div className={`relative inline-flex items-center justify-center mx-auto mb-3 transition-all duration-500 ${isExpanded ? 'w-24 h-24 mb-4' : 'w-20 h-20 mb-3'
+                                                    }`}>
+                                                    {/* Circular Progress Ring */}
+                                                    <svg className={`transform -rotate-90 transition-all duration-500 ${isExpanded ? 'w-24 h-24' : 'w-20 h-20'
+                                                        }`} viewBox="0 0 36 36">
+                                                        <path
+                                                            className="text-green-200 dark:text-green-800"
+                                                            stroke="currentColor"
+                                                            strokeWidth={isExpanded ? "3" : "2.5"}
+                                                            fill="none"
+                                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                        />
+                                                        <path
+                                                            className="text-green-600 dark:text-green-400 transition-all duration-1500 ease-out"
+                                                            stroke="currentColor"
+                                                            strokeWidth={isExpanded ? "3" : "2.5"}
+                                                            strokeLinecap="round"
+                                                            fill="none"
+                                                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                            strokeDasharray={`${(potentialScore / 100) * 100}, 100`}
+                                                            style={{
+                                                                strokeDasharray: `${(potentialScore / 100) * 100}, 100`,
+                                                                animation: 'progressAnimation 1.5s ease-out'
+                                                            }}
+                                                        />
+                                                    </svg>
+                                                    {/* Score Text */}
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <span className={`font-bold text-green-700 dark:text-green-300 transition-all duration-500 ${isExpanded ? 'text-2xl' : 'text-xl'
+                                                            }`}>
+                                                            {potentialScore}
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className={`font-medium text-green-600 dark:text-green-400 transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
-                                                }`}>Optimized Score</div>
-                                            <div className={`text-muted-foreground mt-1 transition-all duration-500 ${isExpanded ? 'text-sm' : 'text-xs'
-                                                }`}>
-                                                {potentialScore > originalScore ? 'AI enhanced' : 'Quality maintained'}
+                                                <div className={`font-medium text-green-600 dark:text-green-400 transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
+                                                    }`}>Optimized Score</div>
+                                                <div className={`text-muted-foreground mt-1 transition-all duration-500 ${isExpanded ? 'text-sm' : 'text-xs'
+                                                    }`}>
+                                                    AI enhanced
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Score Summary Message */}
-                                <div className={`text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800 max-w-2xl mx-auto transition-all duration-500 ${isExpanded ? 'p-4 rounded-xl max-w-3xl' : 'p-3 rounded-lg max-w-2xl'
-                                    }`}>
-                                    {potentialScore > originalScore ? (
+                                    {/* Score Summary Message */}
+                                    <div className={`text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800 max-w-2xl mx-auto transition-all duration-500 ${isExpanded ? 'p-4 rounded-xl max-w-3xl' : 'p-3 rounded-lg max-w-2xl'
+                                        }`}>
                                         <p className={`text-blue-800 dark:text-blue-200 transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
                                             }`}>
                                             <strong>Great improvement!</strong> Your content score increased by {potentialScore - originalScore} points through AI optimization.
                                         </p>
-                                    ) : potentialScore === originalScore ? (
-                                        <p className={`text-blue-800 dark:text-blue-200 transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
-                                            }`}>
-                                            <strong>Score maintained.</strong> Your content was already well-optimized for {platformInfo.name}!
-                                        </p>
-                                    ) : (
-                                        <p className={`text-blue-800 dark:text-blue-200 transition-all duration-500 ${isExpanded ? 'text-lg' : 'text-sm'
-                                            }`}>
-                                            <strong>🎉 Congratulations! Your Content is Already High Quality!</strong> The AI couldn't significantly improve your score because your content already demonstrates excellent quality.
-                                        </p>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* No Improvement Message - Show when score didn't improve */}
+                            {potentialScore <= originalScore && (
+                                <div className="text-center max-w-2xl mx-auto">
+                                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-100 to-green-100 dark:from-emerald-900/20 dark:to-green-900/20 rounded-full mb-4">
+                                        <span className="text-2xl">🎉</span>
+                                    </div>
+                                    <h4 className="text-lg font-semibold text-foreground mb-2">
+                                        Your Content is Already High Quality!
+                                    </h4>
+                                    <p className="text-muted-foreground leading-relaxed">
+                                        The AI couldn't significantly improve your score because your content already demonstrates excellent quality for {platformInfo.name}.
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Priority Improvements */}
                             {improvements.length > 0 && (
@@ -728,10 +742,12 @@ export default function BottomDrawer({
 
                                 {/* Context Message - Only show when score didn't improve */}
                                 {potentialScore <= originalScore && (
-                                    <div className="text-center p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                                        <p className="text-xs text-blue-800 dark:text-blue-200">
-                                            <strong>AI Suggestions Available:</strong> Even though your score couldn't be improved, the AI has provided optimization suggestions below for your consideration.
+                                    <div className="flex items-center justify-center gap-3 py-3">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                        <p className="text-sm text-muted-foreground">
+                                            <span className="font-medium text-foreground">AI Suggestions Available:</span> Even though your score couldn't be improved, the AI has provided optimization suggestions below for your consideration.
                                         </p>
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                                     </div>
                                 )}
 
