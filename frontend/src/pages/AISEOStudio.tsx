@@ -3,8 +3,6 @@ import { useMutation } from '@tanstack/react-query'
 import { api } from '../lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button'
-import { Sparkles } from 'lucide-react'
 import PlatformSelector from '../components/ai-studio/PlatformSelector'
 import ContentInput from '../components/ai-studio/ContentInput'
 import AnalysisResults from '../components/ai-studio/AnalysisResults'
@@ -167,6 +165,7 @@ export default function AISEOStudio() {
                             isAnalyzing={auditMutation.isPending || optimizeMutation.isPending || boostToolMutation.isPending}
                             tool={tool}
                             onToolChange={setTool}
+                            platform={platform}
                         />
                     </CardContent>
                 </Card>
