@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,6 +16,7 @@ interface ContentInputProps {
     isAnalyzing: boolean
     tool: any
     onToolChange: (tool: any) => void
+    platform: 'linkedin' | 'twitter' | 'blog' | 'email'
 }
 
 export default function ContentInput({
@@ -28,14 +29,29 @@ export default function ContentInput({
     onAnalyze,
     isAnalyzing,
     tool,
-    onToolChange
+    onToolChange,
+    platform
 }: ContentInputProps) {
-    const [activeTab, setActiveTab] = useState(contentType)
+    // Simple visibility map per platform
+    const tabsByPlatform: Record<'linkedin' | 'twitter' | 'blog' | 'email', Array<'url' | 'content' | 'tool'>> = {
+        linkedin: ['content'],
+        twitter: ['content'],
+        blog: ['content', 'url', 'tool'],
+        email: ['content']
+    }
+    const availableTabs = tabsByPlatform[platform] ?? ['content', 'url']
+
+    // Ensure selected contentType remains valid when platform changes
+    useEffect(() => {
+        if (!availableTabs.includes(contentType)) {
+            onContentTypeChange(availableTabs[0])
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [platform])
 
     const handleTabChange = (value: string) => {
         const newType = value as 'url' | 'content' | 'tool'
-        onContentTypeChange(newType)
-        setActiveTab(newType)
+        onContentTypeChange(availableTabs.includes(newType) ? newType : availableTabs[0])
     }
 
     const handleToolChange = (field: string, value: string) => {
@@ -43,11 +59,17 @@ export default function ContentInput({
     }
 
     return (
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="content">Text Content</TabsTrigger>
-                <TabsTrigger value="url">URL</TabsTrigger>
-                <TabsTrigger value="tool">Tool</TabsTrigger>
+        <Tabs value={contentType} onValueChange={handleTabChange} className="w-full">
+            <TabsList className={`grid w-full ${availableTabs.length === 3 ? 'grid-cols-3' : availableTabs.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                {availableTabs.includes('content') && (
+                    <TabsTrigger value="content">Text Content</TabsTrigger>
+                )}
+                {availableTabs.includes('url') && (
+                    <TabsTrigger value="url">URL</TabsTrigger>
+                )}
+                {availableTabs.includes('tool') && (
+                    <TabsTrigger value="tool">Tool</TabsTrigger>
+                )}
             </TabsList>
 
             <TabsContent value="content" className="space-y-4">
