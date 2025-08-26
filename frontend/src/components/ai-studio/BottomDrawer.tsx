@@ -545,7 +545,7 @@ export default function BottomDrawer({
                                 }`}>{platformInfo.icon}</span>
                             <span className={`${platformInfo.color} transition-all duration-500 ${isExpanded ? 'text-2xl' : 'text-lg'
                                 }`}>
-                                {isExpanded ? `${platformInfo.name} Optimization Results` : 'Preview & Copy'}
+                                {platformInfo.name} Optimization Results
                             </span>
                         </SheetTitle>
                     </SheetHeader>
