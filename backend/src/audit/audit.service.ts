@@ -15,6 +15,13 @@ export class AuditService {
         recommendations: string[];
         insights: string[];
         platform: string;
+        aiPerception?: {
+            authority: number;
+            credibility: number;
+            expertise: number;
+            freshness: number;
+            rankingPotential: number;
+        };
     }> {
         // Heuristic analysis for detailed breakdown
         const metrics = this.evaluateText(content, platform)
@@ -98,7 +105,8 @@ export class AuditService {
             details,
             recommendations: finalRecommendations,
             insights: finalInsights,
-            platform
+            platform,
+            aiPerception: (lastAIResult as any)?.consensus?.aiPerception
         }
     }
 

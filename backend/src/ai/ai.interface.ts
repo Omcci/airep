@@ -20,6 +20,13 @@ export interface AIAnalysisResponse {
     subScores?: {
       [key: string]: { value: number; max: number; label?: string }
     }
+    aiPerception?: {
+      authority: number
+      credibility: number
+      expertise: number
+      freshness: number
+      rankingPotential: number
+    }
   }
   metadata: {
     tokensUsed: number
@@ -40,6 +47,13 @@ export interface AIConsolidatedResponse {
     engagement: string[]
     subScores?: {
       [key: string]: { value: number; max: number; label?: string }
+    }
+    aiPerception?: {
+      authority: number
+      credibility: number
+      expertise: number
+      freshness: number
+      rankingPotential: number
     }
   }
   providerInsights: {
