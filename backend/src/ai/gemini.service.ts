@@ -94,6 +94,13 @@ export class GeminiService implements AIProvider {
                         hookStrength: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Opening Hook Strength" },
                         storytelling: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Storytelling Flow" },
                         viralPotential: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Viral/Share Potential" }
+                    },
+                    aiPerception: {
+                        authority: Math.floor(Math.random() * 20) + 80,        // 80-100: How AI systems see your expertise
+                        credibility: Math.floor(Math.random() * 20) + 80,      // 80-100: How AI trusts your content
+                        expertise: Math.floor(Math.random() * 20) + 80,        // 80-100: How AI rates your knowledge depth
+                        freshness: Math.floor(Math.random() * 20) + 80,        // 80-100: How AI sees your content relevance
+                        rankingPotential: Math.floor(Math.random() * 20) + 80  // 80-100: How likely AI will rank you high
                     }
                 },
                 metadata: {

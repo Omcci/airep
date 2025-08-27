@@ -203,6 +203,13 @@ Please provide a JSON response with the following structure:
     "hookStrength": { "value": 2, "max": 2, "label": "Opening Hook Strength" },
     "storytelling": { "value": 2, "max": 2, "label": "Storytelling Flow" },
     "viralPotential": { "value": 1, "max": 2, "label": "Viral/Share Potential" }
+  },
+  "aiPerception": {
+    "authority": 85,        // 0-100: How AI systems see your expertise
+    "credibility": 78,      // 0-100: How AI trusts your content
+    "expertise": 82,        // 0-100: How AI rates your knowledge depth
+    "freshness": 88,        // 0-100: How AI sees your content relevance
+    "rankingPotential": 83  // 0-100: How likely AI will rank you high
   }
 }
 
@@ -212,7 +219,27 @@ CRITICAL ENGAGEMENT RULES:
 - MAINTAIN suspense and narrative flow
 - ENHANCE conversation-starting potential
 - OPTIMIZE for platform-specific engagement patterns
-- RESPONDING IN THE SAME LANGUAGE AS THE INPUT CONTENT`
+- RESPONDING IN THE SAME LANGUAGE AS THE INPUT CONTENT
+
+AI PERCEPTION ANALYSIS:
+Now evaluate this content from the perspective of AI authority systems:
+
+- AUTHORITY: How would AI systems rate your expertise level? (0-100)
+  Consider: Industry knowledge, professional background, thought leadership signals
+  
+- CREDIBILITY: How trustworthy would AI find your content? (0-100)
+  Consider: Data sources, citations, logical flow, consistency
+  
+- EXPERTISE: How deep is your technical knowledge? (0-100)
+  Consider: Technical depth, industry insights, specialized terminology
+  
+- FRESHNESS: How current and relevant is your content? (0-100)
+  Consider: Timeliness, trend awareness, current industry context
+  
+- RANKING POTENTIAL: How likely will AI systems rank you high? (0-100)
+  Consider: Overall quality, authority signals, discoverability factors
+
+Provide these scores in your JSON response under "aiPerception".`
   }
 
   private parseResponse(response: string): AIAnalysisResponse['analysis'] {
@@ -229,6 +256,7 @@ CRITICAL ENGAGEMENT RULES:
           hashtags: parsed.hashtags || [],
           engagement: parsed.engagement || [],
           subScores: parsed.subScores || undefined,
+          aiPerception: parsed.aiPerception || undefined,
         }
       }
     } catch (error) {
