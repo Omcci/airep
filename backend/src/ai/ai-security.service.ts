@@ -24,103 +24,63 @@ export class AISecurityService {
 
   // Prompt injection patterns
   private readonly injectionPatterns = [
-    /ignore previous instructions/i,
-    /forget everything/i,
-    /new instructions/i,
-    /system prompt/i,
-    /ignore above/i,
-    /disregard previous/i,
-    /new system/i,
-    /override/i,
-    /bypass/i,
-    /hack/i,
-    /exploit/i,
-    /prompt injection/i,
-    /ignore the above/i,
-    /disregard all above/i,
-    /new rules/i,
-    /new guidelines/i,
-    /ignore all previous/i,
-    /start fresh/i,
-    /reset conversation/i,
-    /new conversation/i,
-    /ignore context/i,
-    /ignore history/i,
-    /ignore everything/i,
-    /ignore all/i,
-    /ignore above instructions/i,
-    /ignore previous rules/i,
-    /ignore previous guidelines/i,
-    /ignore previous context/i,
-    /ignore previous history/i,
-    /ignore previous everything/i,
-    /ignore previous all/i,
-    /ignore previous above/i,
-    /ignore previous system/i,
-    /ignore previous prompt/i,
-    /ignore previous conversation/i,
-    /ignore previous reset/i,
-    /ignore previous fresh/i,
-    /ignore previous start/i,
-    /ignore previous new/i,
-    /ignore previous override/i,
-    /ignore previous bypass/i,
-    /ignore previous hack/i,
-    /ignore previous exploit/i,
-    /ignore previous injection/i,
-    /ignore previous rules/i,
-    /ignore previous guidelines/i,
-    /ignore previous context/i,
-    /ignore previous history/i,
-    /ignore previous everything/i,
-    /ignore previous all/i,
-    /ignore previous above/i,
-    /ignore previous system/i,
-    /ignore previous prompt/i,
-    /ignore previous conversation/i,
-    /ignore previous reset/i,
-    /ignore previous fresh/i,
-    /ignore previous start/i,
-    /ignore previous new/i,
-    /ignore previous override/i,
-    /ignore previous bypass/i,
-    /ignore previous hack/i,
-    /ignore previous exploit/i,
-    /ignore previous injection/i,
+    // Core injection attempts
+    /\bignore\s+(?:all|previous)\s+(?:instructions|prompt|context|rules)\b/i,
+    /\bdisregard\s+(?:all|previous|above)\s+(?:instructions|prompt|context)\b/i,
+    /\boverride\s+(?:system|prompt|instructions)\b/i,
+    /\bbypass\s+(?:system|security|filters?)\b/i,
+    /\bhack\s+(?:the\s+|this\s+)?(?:system|prompt|ai)\b/i,
+    /\bexploit\s+(?:the\s+|this\s+)?(?:system|prompt|ai)\b/i,
+    /\bprompt\s+injection\b/i,
+
+    // System manipulation
+    /\bnew\s+(?:system|instructions?|rules|guidelines)\s+(?:begin|start|now)\b/i,
+    /\breset\s+(?:system|context|conversation)\s+(?:now|completely)\b/i,
+    /\bstart\s+fresh\s+(?:system|context|conversation)\b/i,
+
+    // Role manipulation
+    /\byou\s+(?:must|should|will)\s+(?:now|instead)\s+(?:act|behave|operate)\s+as\b/i,
+    /\bchange\s+your\s+(?:role|behavior|mode)\s+to\b/i,
+    /\bswitch\s+to\s+(?:unrestricted|unsafe|debug)\s+mode\b/i,
+
+    // Context manipulation
+    /\bforget\s+(?:everything|all|context|history)\s+(?:before|above|previous)\b/i,
+    /\bignore\s+(?:context|history|everything)\s+(?:before|above|previous)\b/i,
+    /\bclear\s+(?:context|history|memory)\s+(?:now|completely)\b/i
   ]
 
-  // Suspicious content patterns
+  // Suspicious content patterns - More specific to avoid false positives
   private readonly suspiciousPatterns = [
     /user:\s*[a-z0-9]+/i, // User impersonation
     /password:\s*\S+/i, // Password attempts
-    /api[_-]?key:\s*\S+/i, // API key attempts
-    /token:\s*\S+/i, // Token attempts
-    /secret:\s*\S+/i, // Secret attempts
-    /admin/i, // Admin access attempts
-    /root/i, // Root access attempts
-    /sudo/i, // Sudo attempts
-    /chmod/i, // Command attempts
-    /rm\s+-rf/i, // Dangerous commands
-    /drop\s+table/i, // SQL injection
-    /<script>/i, // XSS attempts
-    /javascript:/i, // JS injection
-    /onload=/i, // Event injection
-    /onerror=/i, // Event injection
-    /onclick=/i, // Event injection
-    /eval\(/i, // Code execution
-    /exec\(/i, // Code execution
-    /system\(/i, // Code execution
-    /shell_exec\(/i, // Code execution
-    /passthru\(/i, // Code execution
-    /proc_open\(/i, // Code execution
-    /popen\(/i, // Code execution
-    /curl_exec\(/i, // Network requests
-    /file_get_contents\(/i, // File access
-    /fopen\(/i, // File access
-    /include\(/i, // File inclusion
-    /require\(/i, // File inclusion
-    /include_once\(/i, // File inclusion
-    /require_once\(/i, // File inclusion
+    /api[_-]?key:\s*[a-z0-9]/i, // API key attempts (must have value)
+    /token:\s*[a-z0-9]/i, // Token attempts (must have value)
+    /secret:\s*[a-z0-9]/i, // Secret attempts (must have value)
+    /\badmin\s+access\b|\badmin\s+password\b|\badmin\s+login\b/i, // Admin specific attempts
+    /\broot\s+access\b|\broot\s+password\b|\broot\s+login\b/i, // Root specific attempts
+    /\bsudo\s+rm\b|\bsudo\s+chmod\b|\bsudo\s+bash\b/i, // Sudo commands
+    /\bchmod\s+[0-7]{3,4}\b/i, // Chmod with numbers
+    /\brm\s+-rf\b|\brmdir\b/i, // Dangerous commands
+    /\bdrop\s+table\b|\bdelete\s+from\b|\btruncate\s+table\b/i, // SQL specific
+    /<script[\s>]|<\/script>/i, // Script tags
+    /javascript:\s*[a-z]/i, // JS protocol with content
+    /\bonload\s*=\s*["']/i, // Event handlers with quotes
+    /\bonerror\s*=\s*["']/i, // Event handlers with quotes
+    /\bonclick\s*=\s*["']/i, // Event handlers with quotes
+    /\beval\s*\(|\beval\s*``/i, // Eval with content
+    /\bexec\s*\(|\bexec\s*``/i, // Exec with content
+    /\bsystem\s*\(|\bsystem\s*``/i, // System with content
+    /\bshell_exec\s*\(|\bshell_exec\s*``/i, // Shell exec with content
+    /\bpassthru\s*\(|\bpassthru\s*``/i, // Passthru with content
+    /\bproc_open\s*\(|\bproc_open\s*``/i, // Proc open with content
+    /\bpopen\s*\(|\bpopen\s*``/i, // Popen with content
+    /\bcurl_exec\s*\(|\bcurl_exec\s*``/i, // Curl exec with content
+    /\bfile_get_contents\s*\(["']/i, // File access with quotes
+    /\bfopen\s*\(["']/i, // File access with quotes
+    /\binclude\s*\(["']/i, // Include with quotes
+    /\brequire\s*\(["']/i, // Require with quotes
+    /\binclude_once\s*\(["']/i, // Include once with quotes
+    /\brequire_once\s*\(["']/i, // Require once with quotes
   ]
 
   /**
