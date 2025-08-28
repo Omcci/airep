@@ -135,12 +135,13 @@ export class AISecurityService {
     // 1. Troll Detection (temporarily disabled for testing)
     const trollResult = this.detectTrollContent(content)
     if (trollResult.isTroll) {
-      // Temporarily log instead of blocking for testing
-      this.logger.warn(`Troll content detected but not blocked: ${trollResult.reason}`)
-      warnings.push(`Content appears to be meaningless or troll content: "${content}"`)
-      riskLevel = 'medium'
-      // blocked = true  // Temporarily disabled
-      // reason = 'Troll content detected'  // Temporarily disabled
+      // Block meaningless/troll content so AI analysis is not triggered
+      this.logger.warn(`Troll content detected and blocked: ${trollResult.reason}`)
+      // Redacted user-facing message (no content echo, no rule hints)
+      warnings.push('Input did not meet minimum quality requirements.')
+      riskLevel = 'high'
+      blocked = true
+      reason = 'Troll content detected'
     }
 
     // 2. Prompt Injection Detection
@@ -163,7 +164,7 @@ export class AISecurityService {
     const qualityResult = this.checkContentQuality(content, platform)
     if (!qualityResult.isValid) {
       if (qualityResult.reason) {
-        warnings.push(qualityResult.reason)
+        warnings.push('Input did not meet minimum quality requirements.')
       }
       if (qualityResult.blocked) {
         blocked = true
@@ -179,6 +180,15 @@ export class AISecurityService {
     if (rateLimitResult.blocked) {
       blocked = true
       reason = 'Rate limit exceeded'
+      riskLevel = 'high'
+    }
+
+    // Moderation (always-on if key present)
+    const moderation = await this.checkOpenAIModeration(content)
+    if (moderation.blocked) {
+      warnings.push('Input did not meet policy requirements.')
+      blocked = true
+      reason = 'Policy violation detected'
       riskLevel = 'high'
     }
 
@@ -203,7 +213,15 @@ export class AISecurityService {
    * Detect troll/garbage content
    */
   private detectTrollContent(content: string): { isTroll: boolean; reason?: string } {
-    const trimmed = content.trim()
+    const normalized = this.normalizeForAnalysis(content)
+    const trimmed = normalized.trim()
+
+    // Fast-pass: sufficiently long, sentence-like content is never troll (language-agnostic)
+    const words = Array.from(trimmed.matchAll(/\p{L}+/gu)).map(m => m[0])
+    const sentenceMatches = trimmed.match(/[.!?…]+/g) || []
+    if (words.length >= 20 && sentenceMatches.length >= 2) {
+      return { isTroll: false }
+    }
 
     // Check for very short content
     if (trimmed.length < 5) {
@@ -222,18 +240,18 @@ export class AISecurityService {
       }
     }
 
-    // Check for gibberish (low character diversity) - less strict for longer content
-    const uniqueChars = new Set(trimmed.toLowerCase().replace(/\s/g, '')).size
-    const totalChars = trimmed.replace(/\s/g, '').length
-    if (totalChars > 10 && totalChars < 50 && uniqueChars / totalChars < 0.3) {
+    // Character diversity checks only apply to short/medium content (language-agnostic)
+    const lettersOnly = trimmed.replace(/[^\p{L}]/gu, '')
+    const uniqueChars = new Set(lettersOnly.toLowerCase()).size
+    const totalChars = lettersOnly.length
+    if (totalChars > 10 && totalChars < 120 && uniqueChars / Math.max(totalChars, 1) < 0.3) {
       return { isTroll: true, reason: 'Low character diversity (gibberish)' }
     }
-    // For longer content (>50 chars), be more lenient as natural language has repetition
-    if (totalChars >= 50 && uniqueChars / totalChars < 0.15) {
+    if (totalChars >= 120 && uniqueChars / Math.max(totalChars, 1) < 0.15 && words.length < 15) {
       return { isTroll: true, reason: 'Very low character diversity (likely gibberish)' }
     }
 
-    // Check for random keyboard mashing
+    // Keyboard mashing patterns
     const keyboardPatterns = [
       /qwerty/i,
       /asdfgh/i,
@@ -244,27 +262,13 @@ export class AISecurityService {
       /ujmik/i,
       /olp/i,
     ]
-
     for (const pattern of keyboardPatterns) {
       if (pattern.test(trimmed)) {
         return { isTroll: true, reason: 'Keyboard mashing pattern' }
       }
     }
 
-    // Check for French language indicators (be more lenient)
-    const frenchIndicators = [
-      /\b(je|tu|il|elle|nous|vous|ils|elles)\b/i,
-      /\b(est|sont|était|étaient|avoir|faire|aller|venir)\b/i,
-      /\b(avec|pour|dans|sur|par|de|du|des|le|la|les)\b/i,
-      /\b(projet|développement|web|mobile|fonctionnalité|erreur|corriger)\b/i,
-    ]
-
-    const frenchWordCount = frenchIndicators.filter(pattern => pattern.test(trimmed)).length
-    if (frenchWordCount >= 3) {
-      // If we detect French words, be more lenient with character diversity
-      return { isTroll: false, reason: 'French language detected' }
-    }
-
+    // Language-agnostic default: not troll
     return { isTroll: false }
   }
 
@@ -320,49 +324,32 @@ export class AISecurityService {
    * Check content quality and relevance
    */
   private checkContentQuality(content: string, platform: string): { isValid: boolean; blocked: boolean; reason?: string } {
-    const trimmed = content.trim()
+    const normalized = this.normalizeForAnalysis(content)
+    const trimmed = normalized.trim()
 
     // Minimum content length based on platform
-    const minLengths = {
-      linkedin: 20,
-      twitter: 10,
-      blog: 50,
-      email: 30
-    }
-
-    const minLength = minLengths[platform as keyof typeof minLengths] || 20
+    const minLengths = { linkedin: 20, twitter: 10, blog: 50, email: 30 }
+    const minLength = (minLengths as any)[platform] || 20
 
     if (trimmed.length < minLength) {
-      return {
-        isValid: false,
-        blocked: true,
-        reason: `Content too short for ${platform}. Minimum ${minLength} characters required.`
-      }
+      return { isValid: false, blocked: true, reason: `Content too short for ${platform}. Minimum ${minLength} characters required.` }
     }
 
-    // Check for meaningful content (not just random words)
-    const words = trimmed.split(/\s+/).filter(word => word.length > 2)
+    // Unicode-aware word extraction (letters only)
+    const words = Array.from(trimmed.matchAll(/\p{L}+/gu)).map(m => m[0]).filter(w => w.length > 2)
     if (words.length < 3) {
-      return {
-        isValid: false,
-        blocked: true,
-        reason: 'Content must contain at least 3 meaningful words.'
-      }
+      return { isValid: false, blocked: true, reason: 'Content must contain at least 3 meaningful words.' }
     }
 
-    // Check for excessive repetition
+    // Excessive repetition
     const wordCounts = new Map<string, number>()
     for (const word of words) {
-      wordCounts.set(word, (wordCounts.get(word) || 0) + 1)
+      const key = word.toLowerCase()
+      wordCounts.set(key, (wordCounts.get(key) || 0) + 1)
     }
-
     const maxRepetition = Math.max(...wordCounts.values())
     if (maxRepetition > words.length * 0.4) {
-      return {
-        isValid: false,
-        blocked: false,
-        reason: 'Content has excessive word repetition.'
-      }
+      return { isValid: false, blocked: false, reason: 'Content has excessive word repetition.' }
     }
 
     return { isValid: true, blocked: false }
@@ -378,10 +365,77 @@ export class AISecurityService {
   }
 
   /**
+   * Optional OpenAI moderation (always attempted if OPENAI_API_KEY is set)
+   */
+  private async checkOpenAIModeration(content: string): Promise<{ blocked: boolean; modelTried?: string; categories?: any; scores?: any }> {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) return { blocked: false }
+
+    const callModeration = async (model: string) => {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 1000)
+      try {
+        const res = await fetch('https://api.openai.com/v1/moderations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({ model, input: content }),
+          signal: controller.signal
+        })
+        clearTimeout(timeout)
+        if (!res.ok) return { ok: false as const }
+        const data = await res.json()
+        const result = data?.results?.[0]
+        if (!result) return { ok: false as const }
+        const blocked = !!result.flagged
+        return { ok: true as const, blocked, categories: result.categories, scores: result.category_scores }
+      } catch {
+        clearTimeout(timeout)
+        return { ok: false as const }
+      }
+    }
+
+    // Try newest first, then fallback
+    const primaryModel = 'omni-moderation-latest'
+    const fallbackModel = 'text-moderation-latest'
+
+    const primary = await callModeration(primaryModel)
+    if (primary.ok) {
+      return { blocked: primary.blocked, modelTried: primaryModel, categories: primary.categories, scores: primary.scores }
+    }
+
+    const fallback = await callModeration(fallbackModel)
+    if (fallback.ok) {
+      return { blocked: fallback.blocked, modelTried: fallbackModel, categories: fallback.categories, scores: fallback.scores }
+    }
+
+    return { blocked: false }
+  }
+
+  /**
+   * Normalize content for analysis: NFKC, strip emojis/pictographs and math alphanumerics, remove zero-width chars
+   */
+  private normalizeForAnalysis(content: string): string {
+    let n = content.normalize('NFKC')
+    // Remove zero-width characters
+    n = n.replace(/[\u200B-\u200D\uFEFF]/g, '')
+    // Remove emoji/pictographs (U+1F300–U+1FAFF), dingbats/misc (U+2600–U+26FF, U+2700–U+27BF)
+    n = n.replace(/[\u{1F300}-\u{1FAFF}]/gu, '')
+    n = n.replace(/[\u2600-\u26FF]/g, '').replace(/[\u2700-\u27BF]/g, '')
+    // Remove Mathematical Alphanumeric Symbols (U+1D400–U+1D7FF)
+    n = n.replace(/[\u{1D400}-\u{1D7FF}]/gu, '')
+    return n
+  }
+
+  /**
    * Sanitize content for safe AI processing
    */
   sanitizeContent(content: string): string {
     return content
+      .normalize('NFKC')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '') // Remove zero-width chars
       .replace(/[<>]/g, '') // Remove potential HTML tags
       .replace(/javascript:/gi, '') // Remove JS protocol
       .replace(/on\w+=/gi, '') // Remove event handlers

@@ -106,6 +106,15 @@ export class AIConsolidationService {
 
         // Average subScores where available
         const subScoreAccumulator: { [key: string]: { sum: number; max: number; count: number; label?: string } } = {}
+        // Average aiPerception where available
+        const perceptionKeys = ['authority', 'credibility', 'expertise', 'freshness', 'rankingPotential'] as const
+        const perceptionAccumulator: Record<string, { sum: number; count: number }> = {
+            authority: { sum: 0, count: 0 },
+            credibility: { sum: 0, count: 0 },
+            expertise: { sum: 0, count: 0 },
+            freshness: { sum: 0, count: 0 },
+            rankingPotential: { sum: 0, count: 0 }
+        }
         responses.forEach(r => {
             const ss = r.analysis.subScores
             if (ss) {
@@ -119,6 +128,15 @@ export class AIConsolidationService {
                     if (item.label) subScoreAccumulator[key].label = item.label
                 })
             }
+            const ap = (r.analysis as any).aiPerception
+            if (ap && typeof ap === 'object') {
+                perceptionKeys.forEach(k => {
+                    if (typeof ap[k] === 'number') {
+                        perceptionAccumulator[k].sum += ap[k]
+                        perceptionAccumulator[k].count += 1
+                    }
+                })
+            }
         })
         const averagedSubScores = Object.fromEntries(
             Object.entries(subScoreAccumulator).map(([key, v]) => [
@@ -126,6 +144,11 @@ export class AIConsolidationService {
                 { value: Math.round(v.sum / Math.max(1, v.count)), max: v.max, label: v.label }
             ])
         )
+        const averagedPerception: any = {}
+        perceptionKeys.forEach(k => {
+            const acc = perceptionAccumulator[k]
+            if (acc.count > 0) averagedPerception[k] = Math.round(acc.sum / acc.count)
+        })
 
         // Combine hashtags
         const allHashtags = responses.flatMap(r => r.analysis.hashtags)
@@ -145,6 +168,7 @@ export class AIConsolidationService {
             subScores: Object.keys(averagedSubScores).length ? averagedSubScores : undefined,
             hashtags: topHashtags,
             engagement: topEngagement,
+            aiPerception: Object.keys(averagedPerception).length ? averagedPerception : undefined,
         }
     }
 

@@ -22,6 +22,9 @@ export class AuditService {
             freshness: number;
             rankingPotential: number;
         };
+        blocked?: boolean;
+        securityWarnings?: string[];
+        reason?: string;
     }> {
         // Heuristic analysis for detailed breakdown
         const metrics = this.evaluateText(content, platform)
@@ -58,47 +61,48 @@ export class AuditService {
             aiInsights = deduplicatedAIAnalysis.insights
 
             this.logger.debug(`[evaluateContent] AI analysis successful - Score: ${aiScore}, Recommendations: ${aiRecommendations?.length || 0}, Insights: ${aiInsights?.length || 0}`)
-        } catch (e) {
-            this.logger.warn(`[evaluateContent] AI analysis failed, falling back to heuristic: ${e.message}`)
-            // If AI fails, we keep heuristic results
+        } catch (e: any) {
+            // If the AI layer blocked for security reasons, short-circuit and return a blocked response
+            const isBlocked = (e?.status === 400 && e?.response?.message === 'Content blocked for security reasons')
+                || /Content blocked for security reasons/i.test(e?.message || '')
+            if (isBlocked) {
+                const securityWarnings: string[] = e?.response?.warnings || []
+                this.logger.warn(`[evaluateContent] Security blocked content. Halting evaluation.`)
+                return {
+                    score: 0,
+                    details: {},
+                    recommendations: [],
+                    insights: [],
+                    platform,
+                    blocked: true,
+                    securityWarnings,
+                    reason: e?.response?.reason || 'security_blocked'
+                }
+            }
+            this.logger.warn(`[evaluateContent] AI analysis failed, falling back to heuristic: ${e?.message}`)
+            // If AI fails for other reasons, we keep heuristic results
         }
 
         // Map AI subScores into details shape when available
         let details = heuristicDetails
         const aiSubScores = lastAIResult?.consensus?.subScores || undefined
         if (aiSubScores && typeof aiSubScores === 'object') {
-            this.logger.debug(`[evaluateContent] Merging AI subScores with heuristic details`)
-            // Override only known keys to preserve the expected shape
-            const merged: typeof heuristicDetails = { ...heuristicDetails }
-                ; (Object.keys(heuristicDetails) as Array<keyof typeof heuristicDetails>).forEach((k) => {
-                    const base = merged[k]! // Non-null assertion as key comes from heuristicDetails
-                    const ai = aiSubScores[k as string]
-                    if (ai && base && typeof ai.value === 'number' && typeof ai.max === 'number') {
-                        merged[k] = {
-                            label: ai.label ?? base.label,
-                            value: ai.value,
-                            max: ai.max,
-                            description: base.description,
-                            why: base.why,
-                            suggestions: base.suggestions,
-                        }
-                    }
-                })
-            details = merged
+            const mapped: any = {}
+            for (const key of Object.keys(heuristicDetails)) {
+                const base = (heuristicDetails as any)[key]
+                const aiSub = (aiSubScores as any)[key]
+                mapped[key] = {
+                    ...base,
+                    ...(aiSub ? { value: aiSub.value, max: aiSub.max, label: aiSub.label || base?.label } : {})
+                }
+            }
+            details = mapped
         }
 
-        // FIXED: Only return AI recommendations if available, otherwise heuristic
-        const finalRecommendations = Array.isArray(aiRecommendations) && aiRecommendations.length > 0
-            ? aiRecommendations
-            : heuristicRecommendations // Use real heuristic recommendations instead of error message
-
-        const finalInsights = Array.isArray(aiInsights) && aiInsights.length > 0
-            ? aiInsights
-            : [`Content analyzed successfully using fallback analysis`] // Simple message when AI fails
-
+        // Build final result using AI when available else heuristic
         const finalScore = (typeof aiScore === 'number' && !isNaN(aiScore)) ? aiScore : heuristicScore
-
-        this.logger.debug(`[evaluateContent] Final result - Score: ${finalScore}, Recommendations: ${finalRecommendations.length}, Insights: ${finalInsights.length}`)
+        const finalRecommendations = aiRecommendations || heuristicRecommendations
+        const finalInsights = aiInsights || []
 
         return {
             score: finalScore,
@@ -106,7 +110,7 @@ export class AuditService {
             recommendations: finalRecommendations,
             insights: finalInsights,
             platform,
-            aiPerception: (lastAIResult as any)?.consensus?.aiPerception
+            aiPerception: lastAIResult?.consensus?.aiPerception
         }
     }
 
