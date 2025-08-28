@@ -1,9 +1,11 @@
-import { useEffect, useState, useRef } from 'react'
-import { Button } from '@/components/ui/button'
+import { useEffect, useState } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Copy, Download, TrendingUp, Target, CheckCircle, ChevronUp, Palette } from 'lucide-react'
+import { Copy, Download, TrendingUp, CheckCircle } from 'lucide-react'
 import { api } from '@/lib/api'
 import { TONE_OPTIONS, type ToneValue } from '@/lib/constants'
+import ExpandedDrawer from '@/components/ai-studio/ExpandedDrawer'
+import AIPerceptionMetrics from '@/components/ai-studio/AIPerceptionMetrics'
+import { useNavigate } from 'react-router-dom'
 
 interface BottomDrawerProps {
     isOpen: boolean
@@ -30,51 +32,25 @@ export default function BottomDrawer({
     const [isGenerating, setIsGenerating] = useState(false)
     const [isExpanded, setIsExpanded] = useState(false)
     const [dragProgress, setDragProgress] = useState(0)
-    const drawerContentRef = useRef<HTMLDivElement>(null)
+    const navigate = useNavigate()
 
     useEffect(() => {
         const onEsc = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen) onToggle()
         }
 
-        // Prevent body scroll when drawer is open
         if (isOpen) {
-            document.body.style.overflow = 'hidden'
             window.addEventListener('keydown', onEsc)
         } else {
-            document.body.style.overflow = 'unset'
             // Reset expanded state when drawer is closed
             setIsExpanded(false)
             setDragProgress(0)
         }
 
         return () => {
-            document.body.style.overflow = 'unset'
             window.removeEventListener('keydown', onEsc)
         }
     }, [isOpen, onToggle])
-
-    // Additional scroll prevention when expanded
-    useEffect(() => {
-        if (isExpanded) {
-            // Prevent main page scroll when expanded
-            document.body.style.overflow = 'hidden'
-            document.body.style.position = 'fixed'
-            document.body.style.width = '100%'
-        } else {
-            // Restore scroll when not expanded
-            document.body.style.overflow = 'hidden' // Keep hidden since drawer is open
-            document.body.style.position = ''
-            document.body.style.width = ''
-        }
-
-        return () => {
-            // Cleanup
-            document.body.style.overflow = ''
-            document.body.style.position = ''
-            document.body.style.width = ''
-        }
-    }, [isExpanded])
 
     // Reset expanded state when drawer is closed via drag
     useEffect(() => {
@@ -88,24 +64,17 @@ export default function BottomDrawer({
         }
     }, [isOpen])
 
-    // Handle scroll events within the drawer
-    useEffect(() => {
-        const drawerContent = drawerContentRef.current
-        if (!drawerContent || !isOpen) return
-
-        const preventScrollBubble = (e: Event) => {
-            e.stopPropagation()
-        }
-
-        // Prevent scroll events from bubbling to parent
-        drawerContent.addEventListener('wheel', preventScrollBubble, { passive: false })
-        drawerContent.addEventListener('touchmove', preventScrollBubble, { passive: false })
-
-        return () => {
-            drawerContent.removeEventListener('wheel', preventScrollBubble)
-            drawerContent.removeEventListener('touchmove', preventScrollBubble)
-        }
-    }, [isOpen])
+    const routeToExpanded = () => {
+        navigate('/studio/expanded', {
+            state: {
+                platform,
+                analysisData,
+                optimizationResult,
+                originalContent: getOriginalContent(),
+            }
+        })
+        onToggle()
+    }
 
     const getPlatformInfo = () => {
         switch (platform) {
@@ -269,8 +238,6 @@ export default function BottomDrawer({
     const content = getOptimizedContent()
     const originalContent = getOriginalContent()
 
-
-
     // Get scores from analysis data
     const originalScore = analysisData?.score || 0
     const optimizedScore = optimizationResult?.optimized?.score || originalScore
@@ -281,6 +248,18 @@ export default function BottomDrawer({
 
     // Don't render anything if there's no content to show
     if (!optimizationResult && !analysisData) {
+        return null
+    }
+
+    if (analysisData?.blocked || analysisData?.securityWarnings?.length > 0) {
+        return null
+    }
+
+    if (analysisData?.score < 20) {
+        return null
+    }
+
+    if (originalContent.length < 20 || !optimizationResult?.optimized?.content) {
         return null
     }
 
@@ -355,7 +334,7 @@ export default function BottomDrawer({
                     className={`transition-all duration-500 ease-out ${isExpanded
                         ? 'h-screen max-h-screen rounded-none border-0'
                         : 'h-[85vh] max-h-[85vh] rounded-t-3xl border-t-2 border-gray-200 dark:border-gray-700'
-                        } p-0`}
+                        } p-0 flex flex-col`}
                     onOpenAutoFocus={(e) => e.preventDefault()}
                     onDragUp={() => { }} // Empty function to hide close button
                     style={{
@@ -395,13 +374,12 @@ export default function BottomDrawer({
                                     const downDeltaY = e.clientY - startY
 
                                     if (deltaY > 0) {
-                                        // Dragging up - expand
+                                        // Dragging up - expand -> navigate to full page
                                         const progress = Math.min(Math.max(upDeltaY / 100, 0), 1)
                                         setDragProgress(progress)
 
                                         if (upDeltaY > 100) {
-                                            setIsExpanded(true)
-                                            setDragProgress(1)
+                                            routeToExpanded()
                                             document.removeEventListener('mousemove', handleMouseMove)
                                             document.removeEventListener('mouseup', handleMouseUp)
                                         }
@@ -420,29 +398,6 @@ export default function BottomDrawer({
                             }
 
                             const handleMouseUp = () => {
-                                if (isExpanded) {
-                                    // When expanded, check if should collapse
-                                    if (dragProgress < 0.5) {
-                                        setIsExpanded(false)
-                                        setDragProgress(0)
-                                    } else {
-                                        setDragProgress(1)
-                                    }
-                                } else {
-                                    // When collapsed, check if should expand or close
-                                    const deltaY = startY - (document.activeElement as any)?.getBoundingClientRect?.()?.top || startY
-                                    if (deltaY > 0 && dragProgress > 0.5) {
-                                        // Dragged up enough - expand
-                                        setIsExpanded(true)
-                                        setDragProgress(1)
-                                    } else if (deltaY < 0 && dragProgress > 0.5) {
-                                        // Dragged down enough - close
-                                        onToggle()
-                                    } else {
-                                        // Reset progress
-                                        setDragProgress(0)
-                                    }
-                                }
                                 document.removeEventListener('mousemove', handleMouseMove)
                                 document.removeEventListener('mouseup', handleMouseUp)
                             }
@@ -476,13 +431,12 @@ export default function BottomDrawer({
                                     const downDeltaY = e.touches[0].clientY - startY
 
                                     if (deltaY > 0) {
-                                        // Dragging up - expand
+                                        // Dragging up - expand -> navigate to full page
                                         const progress = Math.min(Math.max(upDeltaY / 100, 0), 1)
                                         setDragProgress(progress)
 
                                         if (upDeltaY > 100) {
-                                            setIsExpanded(true)
-                                            setDragProgress(1)
+                                            routeToExpanded()
                                             document.removeEventListener('touchmove', handleTouchMove)
                                             document.removeEventListener('touchend', handleTouchEnd)
                                         }
@@ -501,29 +455,6 @@ export default function BottomDrawer({
                             }
 
                             const handleTouchEnd = () => {
-                                if (isExpanded) {
-                                    // When expanded, check if should collapse
-                                    if (dragProgress < 0.5) {
-                                        setIsExpanded(false)
-                                        setDragProgress(0)
-                                    } else {
-                                        setDragProgress(1)
-                                    }
-                                } else {
-                                    // When collapsed, check if should expand or close
-                                    const deltaY = startY - (e.changedTouches[0]?.clientY || startY)
-                                    if (deltaY > 0 && dragProgress > 0.5) {
-                                        // Dragged up enough - expand
-                                        setIsExpanded(true)
-                                        setDragProgress(1)
-                                    } else if (deltaY < 0 && dragProgress > 0.5) {
-                                        // Dragged down enough - close
-                                        onToggle()
-                                    } else {
-                                        // Reset progress
-                                        setDragProgress(0)
-                                    }
-                                }
                                 document.removeEventListener('touchmove', handleTouchMove)
                                 document.removeEventListener('touchend', handleTouchEnd)
                             }
@@ -560,16 +491,24 @@ export default function BottomDrawer({
                             </span>
                         </SheetTitle>
                     </SheetHeader>
-
-                    {/* Content Container - Transforms based on expanded state */}
-                    <div className={`flex-1 overflow-y-auto custom-scrollbar transition-all duration-500 ${isExpanded ? 'p-8' : 'p-6'
-                        }`}
-                        style={{
-                            height: isExpanded ? 'calc(100vh - 140px)' : 'auto',
-                            maxHeight: isExpanded ? 'calc(100vh - 140px)' : 'auto'
-                        }}>
-                        <div className={`transition-all duration-500 ${isExpanded ? 'max-w-6xl mx-auto space-y-8' : 'space-y-6'
-                            }`}>
+                    {/* Content Container - moved scroll handling to ExpandedDrawer */}
+                    {isExpanded ? (
+                        <ExpandedDrawer
+                            platformInfo={platformInfo}
+                            originalScore={originalScore}
+                            potentialScore={potentialScore}
+                            improvements={improvements}
+                            originalContent={originalContent}
+                            currentContent={currentContent}
+                            content={content}
+                            copyToClipboard={copyToClipboard}
+                            handleRedoOptimization={handleRedoOptimization}
+                            isGenerating={isGenerating}
+                            renderToneButtons={renderToneButtons}
+                            analysisData={analysisData}
+                        />
+                    ) : (
+                        <div className={`transition-all duration-500 ${isExpanded ? 'p-8' : 'p-6'} ${isExpanded ? 'max-w-6xl mx-auto space-y-8' : 'space-y-6'}`}>
                             {/* Score Section - Only show when there's actual improvement */}
                             {potentialScore > originalScore && (
                                 <div className={`space-y-4 transition-all duration-500 ${isExpanded ? 'space-y-6' : 'space-y-4'
@@ -691,6 +630,16 @@ export default function BottomDrawer({
                                             <strong>Great improvement!</strong> Your content score increased by {potentialScore - originalScore} points through AI optimization.
                                         </p>
                                     </div>
+
+                                    {/* AI Perception Metrics (blog/email only) */}
+                                    {analysisData?.aiPerception && (platform === 'blog' || platform === 'email') && (
+                                        <div className="mt-3">
+                                            <AIPerceptionMetrics
+                                                aiPerception={analysisData.aiPerception}
+                                                isExpanded={isExpanded}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -856,7 +805,7 @@ export default function BottomDrawer({
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                 </SheetContent>
             </Sheet>
         </>
