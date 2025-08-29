@@ -7,6 +7,7 @@ import Checklist from './pages/Checklist'
 import FAQ from './pages/FAQ'
 import Glossary from './pages/Glossary'
 import AISEOStudio from './pages/AISEOStudio'
+import StudioExpanded from './pages/StudioExpanded'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/studio" element={<AISEOStudio />} />
+            <Route path="/studio/expanded" element={<StudioExpanded />} />
             <Route path="/report" element={<Report />} />
             <Route path="/checklist" element={<Checklist />} />
             <Route path="/faq" element={<FAQ />} />
