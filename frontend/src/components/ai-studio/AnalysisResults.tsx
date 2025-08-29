@@ -23,6 +23,25 @@ export default function AnalysisResults({
 
     if (!analysisData) return null
 
+    // Explicit handling: backend blocked low-quality/gibberish input
+    if (analysisData.blocked) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">📊 Analysis Results</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Content Rejected</p>
+                        <p className="text-xs text-amber-700/80 dark:text-amber-300/80 mt-1">
+                            This input can’t be analyzed. Please provide meaningful, human-readable text (e.g., a paragraph with complete sentences).
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
     const getScoreDescription = (scoreType: string) => {
         switch (scoreType) {
             case 'readability':
