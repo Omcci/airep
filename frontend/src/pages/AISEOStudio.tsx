@@ -97,8 +97,7 @@ export default function AISEOStudio() {
         } else if (contentType === 'content' && content) {
             // For text content, analyze first then optimize
             const analysisResult = await auditMutation.mutateAsync({ content, platform })
-            if (analysisResult) {
-                // Automatically optimize after analysis
+            if (analysisResult && !analysisResult.blocked) {
                 await optimizeMutation.mutateAsync({ content, platform })
             }
         }
