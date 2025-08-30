@@ -121,6 +121,12 @@ export class AnthropicService implements AIProvider {
     }
 
     private buildPrompt(request: AIAnalysisRequest): string {
+        // Use GEO prompt for GEO analysis
+        if (request.userId?.startsWith('geo-')) {
+            const { buildGEOPrompt } = require('./prompts/geo-analysis.prompt')
+            return buildGEOPrompt(request.content, request.contentType)
+        }
+
         const platformInstructions = {
             linkedin: 'OPTIMIZE FOR LINKEDIN ENGAGEMENT: Preserve storytelling hooks, personal anecdotes, and curiosity-building openings. Focus on human connection, vulnerability, and conversation-starting elements. LinkedIn rewards authentic storytelling over corporate polish. Maintain suspense and personal touch throughout.',
             twitter: 'OPTIMIZE FOR X/TWITTER ENGAGEMENT: Use concise, punchy openings with thought-provoking questions. Focus on trending topics, viral potential, and retweetability. Keep it conversational and shareable.',
