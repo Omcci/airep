@@ -1,10 +1,11 @@
 export interface AIAnalysisRequest {
   content: string
   platform: 'linkedin' | 'twitter' | 'blog' | 'email'
-  contentType: 'content' | 'tool' | 'url'
+  contentType: 'content' | 'tool' | 'url' | 'article' | 'documentation' | 'api'
   tone?: 'professional' | 'casual' | 'funny' | 'harsh' | 'friendly' | 'formal'
   maxTokens?: number
   temperature?: number
+  userId?: string
 }
 
 export interface AIAnalysisResponse {
@@ -21,11 +22,19 @@ export interface AIAnalysisResponse {
       [key: string]: { value: number; max: number; label?: string }
     }
     aiPerception?: {
+      // Core authority metrics
       authority: number
       credibility: number
       expertise: number
       freshness: number
       rankingPotential: number
+      // LLM training metrics
+      semanticRelevance: number
+      citationPotential: number
+      knowledgeGraphPosition: number
+      authoritySignals: number
+      contentFreshness: number
+      sourceCredibility: number
     }
   }
   metadata: {
@@ -54,6 +63,12 @@ export interface AIConsolidatedResponse {
       expertise: number
       freshness: number
       rankingPotential: number
+      semanticRelevance: number
+      citationPotential: number
+      knowledgeGraphPosition: number
+      authoritySignals: number
+      contentFreshness: number
+      sourceCredibility: number
     }
   }
   providerInsights: {

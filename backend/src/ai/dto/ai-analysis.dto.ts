@@ -10,7 +10,11 @@ export enum Platform {
 
 export enum ContentType {
     CONTENT = 'content',
-    URL = 'url'
+    URL = 'url',
+    ARTICLE = 'article',
+    DOCUMENTATION = 'documentation',
+    TOOL = 'tool',
+    API = 'api'
 }
 
 export enum Tone {
