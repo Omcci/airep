@@ -8,9 +8,11 @@ import { AIConsolidationService } from './ai-consolidation.service'
 import { AITestController } from './ai-test.controller'
 import { AISecurityService } from './ai-security.service'
 import { RateLimitService } from './rate-limit.service'
+import { AIGEOService } from './ai-geo.service'
+import { AIGEOController } from './ai-geo.controller'
 
 @Module({
-  controllers: [AITestController],
+  controllers: [AITestController, AIGEOController],
   providers: [
     AIService,
     OpenAIService,
@@ -20,7 +22,8 @@ import { RateLimitService } from './rate-limit.service'
     AIConsolidationService,
     AISecurityService,
     RateLimitService,
+    AIGEOService,
   ],
-  exports: [AIService, AISecurityService, RateLimitService],
+  exports: [AIService, AISecurityService, RateLimitService, AIGEOService],
 })
 export class AIModule { }
