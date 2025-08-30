@@ -107,13 +107,27 @@ export class AIConsolidationService {
         // Average subScores where available
         const subScoreAccumulator: { [key: string]: { sum: number; max: number; count: number; label?: string } } = {}
         // Average aiPerception where available
-        const perceptionKeys = ['authority', 'credibility', 'expertise', 'freshness', 'rankingPotential'] as const
+        const perceptionKeys = [
+            // Core authority metrics
+            'authority', 'credibility', 'expertise', 'freshness', 'rankingPotential',
+            // LLM training metrics
+            'semanticRelevance', 'citationPotential', 'knowledgeGraphPosition',
+            'authoritySignals', 'contentFreshness', 'sourceCredibility'
+        ] as const
         const perceptionAccumulator: Record<string, { sum: number; count: number }> = {
+            // Core authority metrics
             authority: { sum: 0, count: 0 },
             credibility: { sum: 0, count: 0 },
             expertise: { sum: 0, count: 0 },
             freshness: { sum: 0, count: 0 },
-            rankingPotential: { sum: 0, count: 0 }
+            rankingPotential: { sum: 0, count: 0 },
+            // LLM training metrics
+            semanticRelevance: { sum: 0, count: 0 },
+            citationPotential: { sum: 0, count: 0 },
+            knowledgeGraphPosition: { sum: 0, count: 0 },
+            authoritySignals: { sum: 0, count: 0 },
+            contentFreshness: { sum: 0, count: 0 },
+            sourceCredibility: { sum: 0, count: 0 }
         }
         responses.forEach(r => {
             const ss = r.analysis.subScores
