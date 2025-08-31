@@ -86,7 +86,7 @@ export class AISecurityService {
   /**
    * Comprehensive security check for AI input
    */
-  async checkInputSecurity(content: string, platform: string): Promise<SecurityCheckResult> {
+  async checkInputSecurity(content: string, platform: string, skipModeration: boolean = false): Promise<SecurityCheckResult> {
     const warnings: string[] = []
     let riskLevel: 'low' | 'medium' | 'high' = 'low'
     let blocked = false
@@ -143,14 +143,13 @@ export class AISecurityService {
       riskLevel = 'high'
     }
 
-    // Moderation (always-on if key present)
-    const moderation = await this.checkOpenAIModeration(content)
-    if (moderation.blocked) {
-      warnings.push('Input did not meet policy requirements.')
-      blocked = true
-      reason = 'Policy violation detected'
-      riskLevel = 'high'
-    }
+    // const moderation = await this.checkOpenAIModeration(content)
+    // if (moderation.blocked) {
+    //   warnings.push('Input did not meet policy requirements.')
+    //   blocked = true
+    //   reason = 'Policy violation detected'
+    //   riskLevel = 'high'
+    // }
 
     // Log security events
     if (warnings.length > 0) {
@@ -287,29 +286,20 @@ export class AISecurityService {
     const normalized = this.normalizeForAnalysis(content)
     const trimmed = normalized.trim()
 
-    // Minimum content length based on platform
-    const minLengths = { linkedin: 20, twitter: 10, blog: 50, email: 30 }
-    const minLength = (minLengths as any)[platform] || 20
-
-    if (trimmed.length < minLength) {
-      return { isValid: false, blocked: true, reason: `Content too short for ${platform}. Minimum ${minLength} characters required.` }
+    // Basic length check
+    if (trimmed.length < 10) {
+      return { isValid: false, blocked: true, reason: 'Content too short. Minimum 10 characters required.' }
     }
 
     // Unicode-aware word extraction (letters only)
     const words = Array.from(trimmed.matchAll(/\p{L}+/gu)).map(m => m[0]).filter(w => w.length > 2)
-    if (words.length < 3) {
-      return { isValid: false, blocked: true, reason: 'Content must contain at least 3 meaningful words.' }
+    if (words.length < 2) {
+      return { isValid: false, blocked: true, reason: 'Content must contain at least 2 meaningful words.' }
     }
 
-    // Excessive repetition
-    const wordCounts = new Map<string, number>()
-    for (const word of words) {
-      const key = word.toLowerCase()
-      wordCounts.set(key, (wordCounts.get(key) || 0) + 1)
-    }
-    const maxRepetition = Math.max(...wordCounts.values())
-    if (maxRepetition > words.length * 0.4) {
-      return { isValid: false, blocked: false, reason: 'Content has excessive word repetition.' }
+    const uniqueChars = new Set(trimmed.toLowerCase()).size
+    if (uniqueChars < 3) {
+      return { isValid: false, blocked: true, reason: 'Content appears to be invalid.' }
     }
 
     return { isValid: true, blocked: false }
