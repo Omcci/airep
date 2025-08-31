@@ -4,9 +4,10 @@ import { AppService } from './app.service'
 import { ContentModule } from './content/content.module'
 import { AuditModule } from './audit/audit.module'
 import { AIModule } from './ai/ai.module'
+import { ProxyModule } from './proxy/proxy.module'
 
 @Module({
-  imports: [ContentModule, AuditModule, AIModule],
+  imports: [ContentModule, AuditModule, AIModule, ProxyModule],
   controllers: [AppController],
   providers: [AppService],
 })
