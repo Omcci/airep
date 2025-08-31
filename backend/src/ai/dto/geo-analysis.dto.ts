@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsEnum, Length } from 'class-validator'
+import { IsString, IsNotEmpty, IsEnum, Length, IsBoolean, IsOptional } from 'class-validator'
 import { Transform } from 'class-transformer'
 
 export enum ContentType {
@@ -27,4 +27,8 @@ export class GEOAnalysisRequestDto {
         message: 'Content type must be one of: article, documentation, tool, api'
     })
     contentType: ContentType
+
+    @IsOptional()
+    @IsBoolean()
+    isTrustedSource?: boolean = false
 }

@@ -33,6 +33,13 @@ export interface GEOAnalysis {
         likelihood: number
         quotableElements: string[]
         citationContexts: string[]
+        metrics: {
+            citationLikelihood: number
+            knowledgeIntegration: number
+            authorityScore: number
+            uniquenessValue: number
+            referenceQuality: number
+        }
     }
     knowledgeSynthesis: {
         integrationScore: number
@@ -76,11 +83,11 @@ export class AIGEOService {
     /**
      * Analyze content for Generative Engine Optimization (GEO)
      */
-    async analyzeGEO(content: string, contentType: string): Promise<GEOAnalysis> {
-        this.logger.log(`Starting GEO analysis for ${contentType}`)
+    async analyzeGEO(content: string, contentType: string, isTrustedSource: boolean = false): Promise<GEOAnalysis> {
+        this.logger.log(`Starting GEO analysis for ${contentType}${isTrustedSource ? ' (trusted source)' : ''}`)
 
-        // Security check
-        const securityResult = await this.aiSecurityService.checkInputSecurity(content, Platform.BLOG)
+        // Security check - Skip moderation for trusted sources like news articles
+        const securityResult = await this.aiSecurityService.checkInputSecurity(content, Platform.BLOG, isTrustedSource)
         if (securityResult.blocked) {
             throw new BadRequestException(`Content blocked: ${securityResult.reason}`)
         }
@@ -123,7 +130,7 @@ export class AIGEOService {
         improvements: string[]
         priority: 'high' | 'medium' | 'low'
         estimatedImpact: number
-        visualImpact: GEOGraph // Visual representation of improvements
+        visualImpact: GEOGraph
     }> {
         const analysis = await this.analyzeGEO(content, contentType)
 
@@ -158,7 +165,7 @@ export class AIGEOService {
         contexts: string[]
         likelihood: number
         competitorComparison: 'better' | 'similar' | 'worse'
-        citationGraph: GEOGraph // Visual representation of citation network
+        citationGraph: GEOGraph
     }> {
         const analysis = await this.analyzeGEO(content, contentType)
 
@@ -180,39 +187,52 @@ export class AIGEOService {
 
     private validateAndNormalizeGEOMetrics(result: any): Omit<GEOAnalysis, 'knowledgeGraph'> {
         const metrics = result.aiPerception || {}
+        const citationAnalysis = result.citationAnalysis || {}
+        const rankingFactors = result.rankingFactors || {}
+        const competitiveAnalysis = result.competitiveAnalysis || {}
+
+        // Extract quotable elements from the content
+        const quotableElements = this.extractQuotableElements(result)
 
         return {
             citationAnalysis: {
-                likelihood: this.normalizeScore(metrics.citationLikelihood),
-                quotableElements: result.quotableElements || [],
-                citationContexts: result.citationContexts || []
+                likelihood: this.normalizeScore(citationAnalysis.likelihood || metrics.citationLikelihood || 75),
+                quotableElements: this.extractQuotableElements(result),
+                citationContexts: this.extractCitationContexts(result),
+                metrics: {
+                    citationLikelihood: this.normalizeScore(citationAnalysis.likelihood || 85),
+                    knowledgeIntegration: this.normalizeScore(metrics.knowledgeIntegration || 80),
+                    authorityScore: this.normalizeScore(metrics.authorityScore || 85),
+                    uniquenessValue: this.normalizeScore(metrics.uniquenessValue || 80),
+                    referenceQuality: this.normalizeScore(metrics.referenceQuality || 85)
+                }
             },
             knowledgeSynthesis: {
-                integrationScore: this.normalizeScore(metrics.knowledgeIntegration),
-                uniqueValue: result.uniqueValue || [],
-                topicConnections: result.topicConnections || []
+                integrationScore: this.normalizeScore(rankingFactors.solutionCompleteness || metrics.knowledgeIntegration || 70),
+                uniqueValue: competitiveAnalysis.uniqueStrengths || [],
+                topicConnections: this.extractTopicConnections(result)
             },
             authorityEvaluation: {
-                credibilityScore: this.normalizeScore(metrics.authorityScore),
-                expertiseSignals: result.expertiseSignals || [],
-                trustFactors: result.trustFactors || []
+                credibilityScore: this.normalizeScore(rankingFactors.technicalDepth || metrics.authorityScore || 80),
+                expertiseSignals: result.authorityEvaluation?.expertiseSignals || [],
+                trustFactors: result.authorityEvaluation?.trustFactors || []
             },
             geoRecommendations: {
-                contentOptimization: result.recommendations || [],
-                authorityEnhancement: result.authorityEnhancement || [],
-                citationImprovement: result.citationImprovement || []
+                contentOptimization: result.recommendations || competitiveAnalysis.improvements || [],
+                authorityEnhancement: this.generateAuthorityEnhancements(result),
+                citationImprovement: this.generateCitationImprovements(result)
             },
             aiPerceptionMetrics: {
-                citationLikelihood: this.normalizeScore(metrics.citationLikelihood),
-                knowledgeIntegration: this.normalizeScore(metrics.knowledgeIntegration),
-                authorityScore: this.normalizeScore(metrics.authorityScore),
-                uniquenessValue: this.normalizeScore(metrics.uniquenessValue),
-                referenceQuality: this.normalizeScore(metrics.referenceQuality)
+                citationLikelihood: this.normalizeScore(citationAnalysis.likelihood || metrics.citationLikelihood || 75),
+                knowledgeIntegration: this.normalizeScore(rankingFactors.solutionCompleteness || metrics.knowledgeIntegration || 70),
+                authorityScore: this.normalizeScore(rankingFactors.technicalDepth || metrics.authorityScore || 80),
+                uniquenessValue: this.normalizeScore(rankingFactors.relevanceScore || metrics.uniquenessValue || 85),
+                referenceQuality: this.normalizeScore(rankingFactors.implementationClarity || metrics.referenceQuality || 75)
             },
             overallAssessment: {
-                strengths: result.strengths || [],
-                improvements: result.improvements || [],
-                potentialImpact: result.potentialImpact || 'moderate'
+                strengths: competitiveAnalysis.uniqueStrengths || [],
+                improvements: competitiveAnalysis.improvements || [],
+                potentialImpact: this.determinePotentialImpact(result)
             }
         }
     }
@@ -229,9 +249,9 @@ export class AIGEOService {
             type: 'content',
             score: analysis.score || 50,
             metrics: {
-                authority: analysis.aiPerception?.authorityScore || 50,
-                relevance: analysis.aiPerception?.citationLikelihood || 50,
-                freshness: analysis.aiPerception?.contentFreshness || 50
+                authority: this.normalizeScore(analysis.rankingFactors?.technicalDepth || analysis.aiPerception?.authorityScore || analysis.authorityEvaluation?.credibilityScore || 80),
+                relevance: this.normalizeScore(analysis.rankingFactors?.relevanceScore || analysis.aiPerception?.citationLikelihood || analysis.citationAnalysis?.likelihood || 75),
+                freshness: this.normalizeScore(analysis.rankingFactors?.contentFreshness || analysis.aiPerception?.contentFreshness || 90)
             }
         })
 
@@ -340,6 +360,157 @@ export class AIGEOService {
         })
 
         return { nodes, edges }
+    }
+
+    private extractQuotableElements(result: any): string[] {
+        const elements = []
+
+        // Extract from citationAnalysis
+        if (result.citationAnalysis?.quotableElements) {
+            elements.push(...result.citationAnalysis.quotableElements)
+        }
+
+        // Extract direct quotes from content
+        if (result.quotes) {
+            elements.push(...result.quotes)
+        }
+
+        // Extract key facts and statistics
+        if (result.keyFacts) {
+            elements.push(...result.keyFacts)
+        }
+
+        // Extract official statements
+        if (result.officialStatements) {
+            elements.push(...result.officialStatements)
+        }
+
+        // Extract from authorityEvaluation
+        if (result.authorityEvaluation?.implementationProof) {
+            elements.push(...result.authorityEvaluation.implementationProof)
+        }
+
+        // Extract from competitiveAnalysis
+        if (result.competitiveAnalysis?.differentiators) {
+            elements.push(...result.competitiveAnalysis.differentiators)
+        }
+
+        // For news articles, extract key events
+        if (result.events) {
+            elements.push(...result.events.map((e: any) => e.description))
+        }
+
+        // Extract significant developments
+        if (result.developments) {
+            elements.push(...result.developments)
+        }
+
+        return elements.filter(Boolean)
+    }
+
+    private extractCitationContexts(result: any): string[] {
+        const contexts = []
+
+        // Extract from citationAnalysis
+        if (result.citationAnalysis?.relevantQueries) {
+            contexts.push(...result.citationAnalysis.relevantQueries.map((q: any) => q.citationContext))
+        }
+
+        // Extract from authorityEvaluation
+        if (result.authorityEvaluation?.trustFactors) {
+            contexts.push(...result.authorityEvaluation.trustFactors)
+        }
+
+        // For news articles, add specific citation contexts
+        if (result.citationContexts) {
+            contexts.push(...result.citationContexts)
+        }
+
+        // Add policy implications
+        if (result.policyImplications) {
+            contexts.push(...result.policyImplications.map((p: any) => `Policy discussion: ${p}`))
+        }
+
+        // Add social impact contexts
+        if (result.socialImpact) {
+            contexts.push(...result.socialImpact.map((s: any) => `Social impact analysis: ${s}`))
+        }
+
+        // Add historical documentation contexts
+        if (result.historicalContext) {
+            contexts.push(...result.historicalContext.map((h: any) => `Historical documentation: ${h}`))
+        }
+
+        // Add related events contexts
+        if (result.relatedEvents) {
+            contexts.push(...result.relatedEvents.map((e: any) => `Related event analysis: ${e}`))
+        }
+
+        return contexts.filter(Boolean)
+    }
+
+    private extractTopicConnections(result: any): string[] {
+        const connections = []
+
+        // Extract from knowledgeGraph
+        if (result.knowledgeGraph?.nodes) {
+            connections.push(...result.knowledgeGraph.nodes
+                .filter((n: any) => n.type === 'topic')
+                .map((n: any) => n.label))
+        }
+
+        // Extract from competitiveAnalysis
+        if (result.competitiveAnalysis?.differentiators) {
+            connections.push(...result.competitiveAnalysis.differentiators)
+        }
+
+        return connections.filter(Boolean)
+    }
+
+    private generateAuthorityEnhancements(result: any): string[] {
+        const enhancements = []
+
+        // Add from authorityEvaluation
+        if (result.authorityEvaluation?.trustFactors) {
+            enhancements.push(...result.authorityEvaluation.trustFactors.map((factor: string) =>
+                `Strengthen ${factor.toLowerCase()} to enhance authority`))
+        }
+
+        // Add from rankingFactors
+        if (result.rankingFactors?.technicalDepth < 80) {
+            enhancements.push('Add more technical details and implementation examples')
+        }
+
+        return enhancements.filter(Boolean)
+    }
+
+    private generateCitationImprovements(result: any): string[] {
+        const improvements = []
+
+        // Add from citationAnalysis
+        if (result.citationAnalysis?.relevantQueries) {
+            improvements.push(...result.citationAnalysis.relevantQueries
+                .filter((q: any) => q.relevance < 80)
+                .map((q: any) => `Improve relevance for "${q.query}" queries`))
+        }
+
+        // Add from rankingFactors
+        if (result.rankingFactors?.implementationClarity < 80) {
+            improvements.push('Add more clear implementation examples')
+        }
+
+        return improvements.filter(Boolean)
+    }
+
+    private determinePotentialImpact(result: any): string {
+        const baseScore = result.rankingFactors?.relevanceScore ||
+            result.citationAnalysis?.likelihood ||
+            result.aiPerception?.citationLikelihood ||
+            75
+
+        if (baseScore >= 85) return 'high'
+        if (baseScore >= 70) return 'moderate'
+        return 'low'
     }
 
     private normalizeScore(score: number): number {

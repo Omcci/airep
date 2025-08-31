@@ -1,4 +1,7 @@
-export const buildGEOPrompt = (content: string, contentType: string) => `Analyze this ${contentType} for AI citation and ranking potential. Consider how it would be referenced when users ask related questions.
+export const buildGEOPrompt = (content: string, contentType: string) => {
+    const isNewsArticle = contentType === 'article'
+
+    return `Analyze this ${contentType} for AI citation and ranking potential. ${isNewsArticle ? 'This is a news article, so focus on extracting key facts, quotes, and newsworthy elements that would be cited by others.' : ''}
 
 CONTENT TO ANALYZE:
 ${content}
@@ -6,6 +9,21 @@ ${content}
 ANALYSIS FRAMEWORK:
 
 1. CITATION POTENTIAL
+${isNewsArticle ? `
+Evaluate how this news article would be cited in contexts like:
+- Reporting on similar events or related issues
+- Analysis of social movements and protests
+- Policy discussions and governance
+- Historical documentation
+- Social impact studies
+
+Consider:
+- Key facts and statistics
+- Official statements and quotes
+- Event chronology and details
+- Social and political implications
+- International relevance`
+            : `
 Evaluate how likely this content would be cited when users ask questions like:
 - "I need a solution for..."
 - "What's the best tool for..."
@@ -15,54 +33,79 @@ Consider:
 - Direct relevance to common queries
 - Unique value proposition
 - Problem-solution fit
-- Implementation ease
+- Implementation ease`}
 
 2. KNOWLEDGE GRAPH POSITION
+${isNewsArticle ? `
+Analyze how this article connects to:
+- Related events and developments
+- Key individuals and organizations
+- Geographic locations
+- Social and political themes
+- Policy and governance issues`
+            : `
 Analyze how this content connects to:
 - Related tools/solutions
 - Use cases and applications
 - Technical domains
-- User needs and problems
+- User needs and problems`}
 
 3. AUTHORITY SIGNALS
+${isNewsArticle ? `
+Evaluate news authority markers:
+- Source credibility (e.g., BBC)
+- Official statements and quotes
+- First-hand accounts
+- Expert commentary
+- Factual accuracy and detail`
+            : `
 Evaluate authority markers:
 - Technical capability proof
 - Problem-solving effectiveness
 - Domain expertise indicators
-- Implementation examples
+- Implementation examples`}
 
-4. COMPETITIVE POSITIONING
-Analyze how it compares to alternatives:
-- Unique differentiators
-- Solution completeness
-- Use case coverage
-- Technical advantages
+4. QUOTABLE ELEMENTS
+${isNewsArticle ? `
+Identify highly citable elements:
+- Key statistics and numbers
+- Official quotes and statements
+- Significant events and actions
+- Policy changes or announcements
+- Expert observations
+- Impactful descriptions`
+            : `
+Identify quotable elements:
+- Technical insights
+- Implementation details
+- Unique approaches
+- Problem-solving methods`}
 
 Please provide a detailed JSON response:
 {
   "citationAnalysis": {
     "likelihood": 85,
-    "relevantQueries": [
-      {
-        "query": "example query",
-        "relevance": 90,
-        "citationContext": "When discussing..."
-      }
+    "quotableElements": [
+      "Exact quotes or facts that are highly citable",
+      "Key statistics or statements",
+      "Significant details or insights"
     ],
-    "quotableElements": ["..."],
-    "useCases": ["..."]
+    "citationContexts": [
+      "Specific contexts where this content would be cited",
+      "Types of discussions where this would be referenced"
+    ]
   },
   "knowledgeGraph": {
     "nodes": [
       {
         "id": "unique_id",
-        "type": "tool|topic|usecase|technology",
+        "type": "event|person|location|topic",
         "label": "Node Label",
-        "category": "primary|related|alternative",
+        "category": "primary|related|context",
         "metrics": {
           "relevance": 85,
           "authority": 80,
-          "uniqueness": 75
+          "freshness": 90
         }
       }
     ],
@@ -70,22 +113,22 @@ Please provide a detailed JSON response:
       {
         "source": "node_id",
         "target": "node_id",
-        "type": "solves|relates_to|alternative_to|implements",
+        "type": "involves|relates_to|impacts|leads_to",
         "strength": 0.8
       }
     ]
   },
   "authorityEvaluation": {
     "credibilityScore": 88,
-    "expertiseSignals": ["..."],
-    "trustFactors": ["..."],
-    "implementationProof": ["..."]
+    "expertiseSignals": ["Source authority indicators"],
+    "trustFactors": ["Credibility factors"],
+    "implementationProof": ["Verification elements"]
   },
   "competitiveAnalysis": {
-    "uniqueStrengths": ["..."],
+    "uniqueStrengths": ["Distinctive aspects"],
     "marketPosition": "leader|alternative|niche",
-    "differentiators": ["..."],
-    "improvements": ["..."]
+    "differentiators": ["Key distinguishing factors"],
+    "improvements": ["Potential enhancements"]
   },
   "rankingFactors": {
     "relevanceScore": 85,
@@ -94,3 +137,4 @@ Please provide a detailed JSON response:
     "implementationClarity": 85
   }
 }`
+}
