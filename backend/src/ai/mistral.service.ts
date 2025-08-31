@@ -225,11 +225,19 @@ QUALITY REQUIREMENTS:
   },
   
   "aiPerception": {
+    // Core authority metrics
     "authority": 85,        // 0-100: How AI systems see your expertise
     "credibility": 78,      // 0-100: How AI trusts your content
     "expertise": 82,        // 0-100: How AI rates your knowledge depth
     "freshness": 88,        // 0-100: How AI sees your content relevance
-    "rankingPotential": 83  // 0-100: How likely AI will rank you high
+    "rankingPotential": 83, // 0-100: How likely AI will rank you high
+    // GEO-specific metrics
+    "semanticRelevance": 85,    // 0-100: How well content matches queries
+    "citationPotential": 88,    // 0-100: Likelihood of being cited
+    "knowledgeGraphPosition": 82, // 0-100: Integration with knowledge graph
+    "authoritySignals": 86,     // 0-100: Credibility indicators
+    "contentFreshness": 90,     // 0-100: Content recency
+    "sourceCredibility": 87     // 0-100: Source reliability
   }
 }
 

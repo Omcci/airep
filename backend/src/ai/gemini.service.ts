@@ -96,11 +96,19 @@ export class GeminiService implements AIProvider {
                         viralPotential: { value: Math.floor(Math.random() * 2) + 1, max: 2, label: "Viral/Share Potential" }
                     },
                     aiPerception: {
+                        // Core authority metrics
                         authority: Math.floor(Math.random() * 20) + 80,        // 80-100: How AI systems see your expertise
                         credibility: Math.floor(Math.random() * 20) + 80,      // 80-100: How AI trusts your content
                         expertise: Math.floor(Math.random() * 20) + 80,        // 80-100: How AI rates your knowledge depth
                         freshness: Math.floor(Math.random() * 20) + 80,        // 80-100: How AI sees your content relevance
-                        rankingPotential: Math.floor(Math.random() * 20) + 80  // 80-100: How likely AI will rank you high
+                        rankingPotential: Math.floor(Math.random() * 20) + 80, // 80-100: How likely AI will rank you high
+                        // GEO-specific metrics
+                        semanticRelevance: Math.floor(Math.random() * 20) + 80,    // 80-100: How well content matches queries
+                        citationPotential: Math.floor(Math.random() * 20) + 80,    // 80-100: Likelihood of being cited
+                        knowledgeGraphPosition: Math.floor(Math.random() * 20) + 80, // 80-100: Integration with knowledge graph
+                        authoritySignals: Math.floor(Math.random() * 20) + 80,     // 80-100: Credibility indicators
+                        contentFreshness: Math.floor(Math.random() * 20) + 80,     // 80-100: Content recency
+                        sourceCredibility: Math.floor(Math.random() * 20) + 80     // 80-100: Source reliability
                     }
                 },
                 metadata: {
