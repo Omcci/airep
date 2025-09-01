@@ -13,8 +13,7 @@ export class AIGEOController {
         this.logger.log(`Analyzing GEO for ${request.contentType}`)
         return this.geoService.analyzeGEO(
             request.content,
-            request.contentType,
-            request.isTrustedSource
+            request.contentType
         )
     }
 
