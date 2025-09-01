@@ -86,7 +86,7 @@ export class AISecurityService {
   /**
    * Comprehensive security check for AI input
    */
-  async checkInputSecurity(content: string, platform: string, skipModeration: boolean = false): Promise<SecurityCheckResult> {
+  async checkInputSecurity(content: string, platform: string): Promise<SecurityCheckResult> {
     const warnings: string[] = []
     let riskLevel: 'low' | 'medium' | 'high' = 'low'
     let blocked = false

@@ -83,11 +83,11 @@ export class AIGEOService {
     /**
      * Analyze content for Generative Engine Optimization (GEO)
      */
-    async analyzeGEO(content: string, contentType: string, isTrustedSource: boolean = false): Promise<GEOAnalysis> {
-        this.logger.log(`Starting GEO analysis for ${contentType}${isTrustedSource ? ' (trusted source)' : ''}`)
+    async analyzeGEO(content: string, contentType: string): Promise<GEOAnalysis> {
+        this.logger.log(`Starting GEO analysis for ${contentType}`)
 
-        // Security check - Skip moderation for trusted sources like news articles
-        const securityResult = await this.aiSecurityService.checkInputSecurity(content, Platform.BLOG, isTrustedSource)
+        // Basic content validation
+        const securityResult = await this.aiSecurityService.checkInputSecurity(content, Platform.BLOG)
         if (securityResult.blocked) {
             throw new BadRequestException(`Content blocked: ${securityResult.reason}`)
         }

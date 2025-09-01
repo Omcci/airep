@@ -28,7 +28,5 @@ export class GEOAnalysisRequestDto {
     })
     contentType: ContentType
 
-    @IsOptional()
-    @IsBoolean()
-    isTrustedSource?: boolean = false
+
 }
