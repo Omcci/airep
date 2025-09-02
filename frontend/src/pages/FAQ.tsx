@@ -3,6 +3,11 @@ import { api } from '../lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Reveal from '@/components/Reveal'
 
+interface FAQItem {
+  question: string
+  answer: string
+}
+
 function FAQPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ['faq'], queryFn: api.getFAQ })
 
@@ -13,7 +18,7 @@ function FAQPage() {
     <div className="mx-auto max-w-3xl p-6 space-y-6">
       <h1 className="text-2xl font-semibold">FAQ</h1>
       <div className="space-y-4">
-        {data!.map((q, i) => (
+        {data!.map((q: FAQItem, i: number) => (
           <Reveal key={i}>
             <Card>
               <CardHeader>

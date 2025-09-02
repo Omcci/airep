@@ -6,6 +6,11 @@ import { Input } from '@/components/ui/input'
 import { useMemo, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
+interface GlossaryTerm {
+  term: string
+  definition: string
+}
+
 function GlossaryPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ['glossary'], queryFn: api.getGlossary })
   const [q, setQ] = useState('')
@@ -13,9 +18,9 @@ function GlossaryPage() {
   const filtered = useMemo(() => {
     if (!data) return []
     const s = q.toLowerCase()
-    const searched = data.filter((t) => t.term.toLowerCase().includes(s) || t.definition.toLowerCase().includes(s))
+    const searched = data.filter((t: GlossaryTerm) => t.term.toLowerCase().includes(s) || t.definition.toLowerCase().includes(s))
     if (tab === 'all') return searched
-    return searched.filter((t) => {
+    return searched.filter((t: GlossaryTerm) => {
       const first = (t.term.trim()[0] || '').toLowerCase()
       if (first < 'a' || first > 'z') return false
       if (tab === 'a-m') return first >= 'a' && first <= 'm'
@@ -47,7 +52,7 @@ function GlossaryPage() {
         </Tabs>
       </div>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((t, i) => (
+        {filtered.map((t: GlossaryTerm, i: number) => (
           <Reveal key={i}>
             <Card className="text-sm">
               <CardHeader>

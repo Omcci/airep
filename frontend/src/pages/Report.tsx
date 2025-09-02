@@ -6,6 +6,21 @@ import { CheckCircle2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 
+interface ReportSource {
+  title: string
+  url: string
+}
+
+interface ReportSection {
+  id: string
+  title: string
+  paragraphs?: string[]
+  bullets?: string[]
+  sources?: ReportSource[]
+}
+
+
+
 function ReportPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ['report'], queryFn: api.getReport })
 
@@ -20,7 +35,7 @@ function ReportPage() {
         </p>
       </div>
       <div className="space-y-6">
-        {data!.sections.map((s) => (
+        {data!.sections.map((s: ReportSection) => (
           <Reveal key={s.id}>
             <motion.div whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
               <Card className="transition-shadow hover:shadow-lg">
@@ -28,14 +43,14 @@ function ReportPage() {
                   <CardTitle className="text-xl">{s.title}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {s.paragraphs?.map((p, i) => (
+                  {s.paragraphs?.map((p: string, i: number) => (
                     <p key={i} className="text-gray-700 dark:text-gray-300">
                       {p}
                     </p>
                   ))}
                   {s.bullets && (
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {s.bullets.map((b, i) => (
+                      {s.bullets.map((b: string, i: number) => (
                         <motion.div
                           key={i}
                           initial={{ opacity: 0, y: 8 }}
@@ -64,7 +79,7 @@ function ReportPage() {
                     <div className="pt-2 text-xs text-gray-500">
                       Sources:
                       <ul className="mt-1 list-disc pl-6">
-                        {s.sources.map((src) => (
+                        {s.sources.map((src: ReportSource) => (
                           <li key={src.url}>
                             <a className="underline hover:text-primary" href={src.url} target="_blank" rel="noreferrer">
                               {src.title}

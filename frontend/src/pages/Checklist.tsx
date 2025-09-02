@@ -4,6 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Reveal from '@/components/Reveal'
 import { CheckCircle2 } from 'lucide-react'
 
+interface ChecklistItem {
+  title: string
+  url: string
+}
+
+interface ChecklistGroup {
+  id: string
+  title: string
+  items: string[]
+  sources?: ChecklistItem[]
+}
+
+
+
 function ChecklistPage() {
   const { data, isLoading, error } = useQuery({ queryKey: ['checklist'], queryFn: api.getChecklist })
 
@@ -14,7 +28,7 @@ function ChecklistPage() {
     <div className="mx-auto max-w-3xl p-6 space-y-6">
       <h1 className="text-2xl font-semibold">{data!.title}</h1>
       <div className="space-y-6">
-        {data!.groups.map((g) => (
+        {data!.groups.map((g: ChecklistGroup) => (
           <Reveal key={g.id}>
             <Card>
               <CardHeader>
@@ -22,7 +36,7 @@ function ChecklistPage() {
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                  {g.items.map((it, i) => (
+                  {g.items.map((it: string, i: number) => (
                     <li key={i} className="flex items-start gap-2">
                       <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-500" />
                       <span>{it}</span>
@@ -33,7 +47,7 @@ function ChecklistPage() {
                   <div className="pt-2 text-xs text-gray-500">
                     Sources:
                     <ul className="mt-1 list-disc pl-6">
-                      {g.sources.map((src) => (
+                      {g.sources.map((src: ChecklistItem) => (
                         <li key={src.url}>
                           <a className="underline hover:text-primary" href={src.url} target="_blank" rel="noreferrer">
                             {src.title}
