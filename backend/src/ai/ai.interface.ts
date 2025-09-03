@@ -21,6 +21,34 @@ export interface AIAnalysisResponse {
     subScores?: {
       [key: string]: { value: number; max: number; label?: string }
     }
+    // GEO Analysis fields
+    citationAnalysis?: {
+      quotableElements: string[]
+      citationContexts: string[]
+      relevantQueries?: Array<{ query: string; citationContext: string }>
+    }
+    authorityEvaluation?: {
+      expertiseSignals: string[]
+      trustFactors: string[]
+      implementationProof?: string[]
+    }
+    competitiveAnalysis?: {
+      uniqueStrengths: string[]
+      differentiators: string[]
+      improvements: string[]
+    }
+    knowledgeGraph?: {
+      nodes: Array<{
+        type: string
+        label: string
+        category: string
+        metrics: {
+          relevance: number
+          authority: number
+          freshness: number
+        }
+      }>
+    }
     aiPerception?: {
       // Core authority metrics
       authority: number

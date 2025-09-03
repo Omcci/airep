@@ -174,6 +174,9 @@ export class AIConsolidationService {
         const uniqueEngagement = [...new Set(allEngagement)]
         const topEngagement = this.selectTopItems(uniqueEngagement, 3)
 
+        // Consolidate GEO Analysis fields
+        const consolidatedGEO = this.consolidateGEOFields(responses)
+
         return {
             score: averageScore,
             insights: topInsights,
@@ -183,6 +186,7 @@ export class AIConsolidationService {
             hashtags: topHashtags,
             engagement: topEngagement,
             aiPerception: Object.keys(averagedPerception).length ? averagedPerception : undefined,
+            ...consolidatedGEO
         }
     }
 
@@ -217,6 +221,42 @@ export class AIConsolidationService {
         const variancePenalty = Math.min(standardDeviation / 20, 0.3) // Max 30% penalty
 
         return Math.max(0.3, baseConfidence - variancePenalty)
+    }
+
+    private consolidateGEOFields(responses: AIAnalysisResponse[]) {
+        const geoResponses = responses.filter(r => r.analysis.citationAnalysis)
+        if (geoResponses.length === 0) return {}
+
+        // Combine quotable elements and citation contexts
+        const allQuotableElements = geoResponses.flatMap(r => r.analysis.citationAnalysis?.quotableElements || [])
+        const allCitationContexts = geoResponses.flatMap(r => r.analysis.citationAnalysis?.citationContexts || [])
+        const allExpertiseSignals = geoResponses.flatMap(r => r.analysis.authorityEvaluation?.expertiseSignals || [])
+        const allTrustFactors = geoResponses.flatMap(r => r.analysis.authorityEvaluation?.trustFactors || [])
+        const allUniqueStrengths = geoResponses.flatMap(r => r.analysis.competitiveAnalysis?.uniqueStrengths || [])
+        const allDifferentiators = geoResponses.flatMap(r => r.analysis.competitiveAnalysis?.differentiators || [])
+        const allImprovements = geoResponses.flatMap(r => r.analysis.competitiveAnalysis?.improvements || [])
+
+        // Get the best response (highest score) for knowledge graph
+        const bestResponse = geoResponses.reduce((best, current) =>
+            current.analysis.score > best.analysis.score ? current : best
+        )
+
+        return {
+            citationAnalysis: {
+                quotableElements: [...new Set(allQuotableElements)],
+                citationContexts: [...new Set(allCitationContexts)]
+            },
+            authorityEvaluation: {
+                expertiseSignals: [...new Set(allExpertiseSignals)],
+                trustFactors: [...new Set(allTrustFactors)]
+            },
+            competitiveAnalysis: {
+                uniqueStrengths: [...new Set(allUniqueStrengths)],
+                differentiators: [...new Set(allDifferentiators)],
+                improvements: [...new Set(allImprovements)]
+            },
+            knowledgeGraph: bestResponse.analysis.knowledgeGraph
+        }
     }
 
     private identifyConflicts(responses: AIAnalysisResponse[]): string[] {
