@@ -67,32 +67,35 @@ Evaluate authority markers:
 
 4. QUOTABLE ELEMENTS
 ${isNewsArticle ? `
-Identify highly citable elements:
-- Key statistics and numbers
-- Official quotes and statements
-- Significant events and actions
-- Policy changes or announcements
-- Expert observations
-- Impactful descriptions`
+Extract ACTUAL quotable elements from the content:
+- Specific numbers, statistics, and data points
+- Direct quotes from officials, witnesses, or experts
+- Concrete event details and descriptions
+- Policy statements and announcements
+- Key facts that would be cited by other sources
+IMPORTANT: Extract the actual text/data from the article, not suggestions for what could be added.`
             : `
-Identify quotable elements:
-- Technical insights
-- Implementation details
-- Unique approaches
-- Problem-solving methods`}
+Extract ACTUAL quotable elements from the content:
+- Specific technical details or capabilities
+- Concrete implementation approaches
+- Unique features or benefits mentioned
+- Problem-solving insights described
+IMPORTANT: Extract actual content from the text, not suggestions for improvement.`}
 
 Please provide a detailed JSON response:
 {
   "citationAnalysis": {
     "likelihood": 85,
     "quotableElements": [
-      "Exact quotes or facts that are highly citable",
-      "Key statistics or statements",
-      "Significant details or insights"
+      "EXTRACT ACTUAL QUOTES, FACTS, AND DATA FROM THE CONTENT",
+      "Include specific numbers, statistics, or statements found in the text",
+      "Do NOT include suggestions or recommendations - only existing content"
     ],
     "citationContexts": [
-      "Specific contexts where this content would be cited",
-      "Types of discussions where this would be referenced"
+      "Event coverage and breaking news",
+      "Historical documentation",
+      "Policy analysis and discussion",
+      "Social impact studies"
     ]
   },
   "knowledgeGraph": {
