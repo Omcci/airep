@@ -28,6 +28,12 @@ function NavBar() {
                 <motion.span layoutId="nav-underline" className="absolute inset-x-1 -bottom-1 h-0.5 rounded bg-gradient-to-r from-indigo-500 to-emerald-500" />
               )}
             </NavLink>
+            <NavLink to="/studio/geo" className={({ isActive }) => `${base} ${isActive ? active : inactive}`}>
+              GEO Studio
+              {location.pathname === '/studio/geo' && (
+                <motion.span layoutId="nav-underline" className="absolute inset-x-1 -bottom-1 h-0.5 rounded bg-gradient-to-r from-indigo-500 to-emerald-500" />
+              )}
+            </NavLink>
             <NavLink to="/report" className={({ isActive }) => `${base} ${isActive ? active : inactive}`}>
               Report
               {location.pathname === '/report' && (
@@ -61,5 +67,3 @@ function NavBar() {
 }
 
 export default NavBar
-
-
