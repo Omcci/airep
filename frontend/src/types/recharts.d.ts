@@ -1,6 +1,13 @@
 import { FunctionComponent } from 'react'
 
 declare module 'recharts' {
+    export interface PolarGridProps {
+        stroke?: string
+        gridType?: 'polygon' | 'circle'
+        gridCount?: number
+        strokeDasharray?: string
+    }
+
     export interface PolarAngleAxisProps {
         dataKey?: string | number | ((obj: any) => any)
         tick?: boolean | object | React.ReactElement | ((props: any) => React.ReactElement)
@@ -14,11 +21,12 @@ declare module 'recharts' {
     export interface PolarRadiusAxisProps {
         angle?: number
         domain?: [number, number] | [(dataMin: number) => number, (dataMax: number) => number]
-        tick?: boolean | object | React.ReactElement | ((props: any) => React.ReactElement)
+        tick?: boolean | object | React.ReactElement | ((props: any) => React.ReactElement | null)
         tickLine?: boolean | object | React.ReactElement | ((props: any) => React.ReactElement)
         axisLine?: boolean | object
         orient?: 'left' | 'right' | 'middle'
         type?: 'number' | 'category'
+        tickCount?: number
     }
 
     export interface RadarProps {
@@ -27,8 +35,17 @@ declare module 'recharts' {
         stroke?: string
         fill?: string
         fillOpacity?: number
+        strokeWidth?: number
         legendType?: 'line' | 'square' | 'rect' | 'circle' | 'cross' | 'diamond' | 'star' | 'triangle' | 'wye' | 'none'
-        dot?: boolean | object | React.ReactElement | ((props: any) => React.ReactElement)
+        dot?: boolean | object | React.ReactElement | ((props: any) => React.ReactElement) | {
+            fill?: string
+            strokeWidth?: number
+            r?: number
+        }
+        activeDot?: {
+            r?: number
+            strokeWidth?: number
+        }
         label?: boolean | object | React.ReactElement | ((props: any) => React.ReactElement)
         isAnimationActive?: boolean
         animationBegin?: number
@@ -51,6 +68,7 @@ declare module 'recharts' {
         }>
     }
 
+    export const PolarGrid: FunctionComponent<PolarGridProps>
     export const PolarAngleAxis: FunctionComponent<PolarAngleAxisProps>
     export const PolarRadiusAxis: FunctionComponent<PolarRadiusAxisProps>
     export const Radar: FunctionComponent<RadarProps>

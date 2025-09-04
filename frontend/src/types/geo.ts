@@ -32,9 +32,25 @@ export interface CitationAnalysis {
 
 export interface GEOAnalysisData {
     citationAnalysis: CitationAnalysis
-    knowledgeGraph: {
-        nodes: APINode[]
-        edges: APIEdge[]
+    knowledgeSynthesis: {
+        integrationScore: number
+        uniqueValue: string[]
+        topicConnections: string[]
+    }
+    authorityEvaluation: {
+        credibilityScore: number
+        expertiseSignals: string[]
+        trustFactors: string[]
+    }
+    geoRecommendations: {
+        contentOptimization: string[]
+        authorityEnhancement: string[]
+        citationImprovement: string[]
+    }
+    overallAssessment: {
+        strengths: string[]
+        improvements: string[]
+        potentialImpact: string
     }
     aiPerceptionMetrics: {
         citationLikelihood: number
@@ -43,12 +59,13 @@ export interface GEOAnalysisData {
         uniquenessValue: number
         referenceQuality: number
     }
+    knowledgeGraph: {
+        nodes: APINode[]
+        edges: APIEdge[]
+    }
     rankingFactors: Record<string, number>
     competitiveAnalysis: {
         marketPosition: string
         uniqueStrengths: string[]
-    }
-    geoRecommendations: {
-        contentOptimization: string[]
     }
 }
