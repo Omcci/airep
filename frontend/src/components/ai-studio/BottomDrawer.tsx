@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Copy, Download, TrendingUp, CheckCircle } from 'lucide-react'
 import { api } from '@/lib/api'
 import { TONE_OPTIONS, type ToneValue } from '@/lib/constants'
 import ExpandedDrawer from '@/components/ai-studio/ExpandedDrawer'
-import AIPerceptionMetrics from '@/components/ai-studio/AIPerceptionMetrics'
 import AnalysisResultsDisplay from '@/components/ai-studio/AnalysisResultsDisplay'
-import { useNavigate } from 'react-router-dom'
 
 interface BottomDrawerProps {
     isOpen: boolean

@@ -51,12 +51,6 @@ export default function AISEOStudio() {
         }
     })
 
-    const boostToolMutation = useMutation({
-        mutationFn: api.boostTool,
-        onSuccess: () => {
-            setTimeout(() => setCurrentStep('preview'), 500)
-        }
-    })
 
     // Refs for smooth scrolling
     const analysisRef = useRef<HTMLDivElement>(null)
@@ -81,8 +75,7 @@ export default function AISEOStudio() {
 
     const isWorking =
         auditMutation.isPending ||
-        optimizeMutation.isPending ||
-        boostToolMutation.isPending
+        optimizeMutation.isPending
 
     const handleAnalyze = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -106,15 +99,6 @@ export default function AISEOStudio() {
     const handleToolOptimize = (e: React.FormEvent) => {
         e.preventDefault()
         if (contentType === 'tool') {
-            const toolData = {
-                name: tool.name,
-                description: tool.description || tool.tagline || '',
-                url: tool.homepage,
-                category: tool.categories.split('\n').map(s => s.trim()).filter(Boolean).join(', '),
-                useCases: tool.examples.split('\n').map(s => s.trim()).filter(Boolean).join(', '),
-                pricing: tool.pricing || 'Free'
-            }
-            boostToolMutation.mutate(toolData)
         }
     }
 
@@ -161,7 +145,7 @@ export default function AISEOStudio() {
                             url={url}
                             onUrlChange={setUrl}
                             onAnalyze={contentType === 'tool' ? handleToolOptimize : handleAnalyze}
-                            isAnalyzing={auditMutation.isPending || optimizeMutation.isPending || boostToolMutation.isPending}
+                            isAnalyzing={auditMutation.isPending || optimizeMutation.isPending}
                             tool={tool}
                             onToolChange={setTool}
                             platform={platform}
@@ -208,20 +192,20 @@ export default function AISEOStudio() {
                 ) : null}
 
                 {/* Step 3: Preview - Show inline when ready */}
-                {currentStep === 'preview' && (optimizeMutation.data || boostToolMutation.data) && (
+                {currentStep === 'preview' && optimizeMutation.data && (
                     <div ref={previewRef}>
                     </div>
                 )}
             </div>
 
             {/* Bottom Drawer for Results */}
-            {(optimizeMutation.data || boostToolMutation.data) && (
+            {optimizeMutation.data && (
                 <BottomDrawer
                     isOpen={bottomDrawerOpen}
                     onToggle={() => setBottomDrawerOpen(!bottomDrawerOpen)}
                     platform={platform}
                     contentType={contentType}
-                    optimizationResult={contentType === 'tool' ? boostToolMutation.data : optimizeMutation.data}
+                    optimizationResult={optimizeMutation.data}
                     tool={tool}
                     analysisData={auditMutation.data}
                     originalContent={contentType === 'tool' ? tool.description || tool.tagline : contentType === 'content' ? content : url}

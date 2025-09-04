@@ -6,7 +6,6 @@ export default function SmoothScroll({ children }: PropsWithChildren) {
         const lenis = new Lenis({
             duration: 1.1,
             smoothWheel: true,
-            smoothTouch: false,
             gestureOrientation: 'vertical',
         })
 
@@ -18,7 +17,6 @@ export default function SmoothScroll({ children }: PropsWithChildren) {
 
         return () => {
             cancelAnimationFrame(id)
-            // @ts-expect-error destroy may be optional
             lenis?.destroy?.()
         }
     }, [])

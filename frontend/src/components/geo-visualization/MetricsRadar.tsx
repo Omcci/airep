@@ -31,24 +31,24 @@ export default function MetricsRadar({ title, metrics, maxValue = 100, showLegen
             stroke: '#2563eb',
             fill: '#3b82f6',
             grid: '#e2e8f0',
-            text: '#1e293b'
+            text: '#64748b'
         },
         dark: {
-            stroke: '#3b82f6',
-            fill: '#2563eb',
+            stroke: '#60a5fa',
+            fill: '#3b82f6',
             grid: '#334155',
-            text: '#e2e8f0'
+            text: '#94a3b8'
         }
     }
 
     const currentColors = colors[theme === 'dark' ? 'dark' : 'light']
 
     return (
-        <div className="rounded-xl bg-card text-card-foreground shadow">
-            <div className="flex flex-col space-y-1.5 p-6">
-                <div className="font-semibold leading-none tracking-tight">{title}</div>
+        <div className="rounded-xl bg-card text-card-foreground">
+            <div className="flex flex-col space-y-1.5 p-4">
+                <div className="text-sm font-medium text-muted-foreground">{title}</div>
             </div>
-            <div className="p-6 pt-0 h-[400px]">
+            <div className="p-4 pt-0 h-[500px]">
                 <RadarChartWrapper
                     data={data()}
                     colors={currentColors}
