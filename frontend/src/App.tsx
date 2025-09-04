@@ -8,6 +8,7 @@ import FAQ from './pages/FAQ'
 import Glossary from './pages/Glossary'
 import AISEOStudio from './pages/AISEOStudio'
 import StudioExpanded from './pages/StudioExpanded'
+import GEOStudio from './pages/GEOStudio'
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/studio" element={<AISEOStudio />} />
             <Route path="/studio/expanded" element={<StudioExpanded />} />
+            <Route path="/studio/geo" element={<GEOStudio />} />
             <Route path="/report" element={<Report />} />
             <Route path="/checklist" element={<Checklist />} />
             <Route path="/faq" element={<FAQ />} />
