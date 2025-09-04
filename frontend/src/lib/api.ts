@@ -1,5 +1,3 @@
-import type { Report, Checklist, FAQItem, GlossaryTerm } from '../types/content'
-
 const API_BASE = '/api'
 
 async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
@@ -34,14 +32,9 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     }).then(res => res.json()),
-  boostTool: (data: { name: string; description: string; url: string; category: string; useCases: string; pricing: string }) =>
-    fetch('/api/boost/tool', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).then(res => res.json()),
-  boostArticle: (data: { title: string; content: string; keywords: string }) =>
-    fetch('/api/boost/article', {
+  // GEO Analysis
+  geoAnalyze: (data: { content: string; contentType: string; url?: string }) =>
+    fetch('/api/geo/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
