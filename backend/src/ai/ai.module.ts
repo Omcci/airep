@@ -21,6 +21,6 @@ import { RateLimitService } from './rate-limit.service'
     AISecurityService,
     RateLimitService,
   ],
-  exports: [AIService, AISecurityService, RateLimitService],
+  exports: [AIService, AISecurityService, RateLimitService, OpenAIService, AnthropicService, MistralService, GeminiService],
 })
 export class AIModule { }
